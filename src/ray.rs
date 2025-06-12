@@ -1,4 +1,4 @@
-use crate::{color::Color, sphere::Sphere, vec3::Vec3};
+use crate::{color::Color, hittable::{Hittable, Sphere}, vec3::Vec3};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -14,34 +14,32 @@ impl Ray {
         }
     }
 
-    pub fn origin(&self) -> &Vec3 {
-        &self.origin
+    pub fn origin(&self) -> Vec3 {
+        self.origin
     }
 
-    pub fn dir(&self) -> &Vec3 {
-        &self.dir
+    pub fn dir(&self) -> Vec3 {
+        self.dir
     }
 
     pub fn at(&self, t: f64) -> Vec3 {
         self.origin.clone() + self.dir.clone() * t
     }
 
-    pub fn hit_sphere(&self, sphere: Sphere) -> bool {
-        let oc = sphere.center() - self.origin;
-        let a = self.dir.dot(self.dir);
-        let b = -2.0 * self.dir.dot(oc);
-        let c = oc.dot(oc) - sphere.radius() * sphere.radius();
-        // Check if the quadratic has solutions
-        b * b - 4.0 * a * c >= 0.0
-    }
-
     pub fn color(&self) -> Color {
-        if self.hit_sphere(Sphere::new(Vec3(0.0,0.0,-1.0), 0.5)) {
-            return Color::new(1.0, 0.0,0.0)
+        let center = Vec3(0., 0., -1.);
+        let sphere = Sphere::new(center, 0.5);
+        match sphere.hit(self) {
+            Some(t) => {
+                let n = (self.at(t) - center).unit();
+                return 0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1.);
+            }
+            None => {
+                let u = self.dir.unit();
+                let a = 0.5 * (u.y() + 1.0);
+                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+            }
         }
-        let u = self.dir.unit();
-        let a = 0.5 * (u.y() + 1.0);
-        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
 }
 
