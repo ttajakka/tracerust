@@ -1,4 +1,5 @@
 use crate::{ray::Ray, vec3::Vec3};
+use std::rc::Rc;
 
 pub struct HitRecord {
     pub point: Vec3,
@@ -36,6 +37,39 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+}
+
+pub struct HittableList {
+    pub objects: Vec<Rc<dyn Hittable>>,
+}
+
+impl HittableList {
+    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.objects.push(object);
+    }
+
+    pub fn clear(&mut self) {
+        self.objects.clear();
+    }
+
+    pub fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        let mut temp_rec = HitRecord::new(Vec3(0., 0., 0.), 0., *ray, Vec3(1., 0., 0.));
+        let mut hit_anything = false;
+        let mut _closest_so_far = ray_tmax;
+
+        for o in &self.objects {
+            if let Some(rec) = o.hit(ray, ray_tmin, ray_tmax) {
+                hit_anything = true;
+                _closest_so_far = rec.t;
+                temp_rec = rec;
+            };
+        }
+
+        match hit_anything {
+            true => Some(temp_rec),
+            false => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
