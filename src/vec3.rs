@@ -1,6 +1,6 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg};
+use std::ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign, Neg};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
@@ -24,7 +24,7 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    pub fn dot(&self, other: &Self) -> f64 {
+    pub fn dot(&self, other: Self) -> f64 {
         self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
 
@@ -37,7 +37,7 @@ impl Vec3 {
     }
 
     pub fn unit(&self) -> Self {
-        self.clone() / self.length()
+        *self / self.length()
     }
 }
 
@@ -51,7 +51,21 @@ impl Add for Vec3 {
 
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
-        *self = self.clone() + rhs;
+        *self = *self + rhs;
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self + (-rhs)
+    }
+}
+
+impl SubAssign for Vec3 {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
     }
 }
 
@@ -71,15 +85,23 @@ impl Mul<Self> for Vec3 {
     }
 }
 
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        rhs * self
+    }
+}
+
 impl MulAssign<f64> for Vec3 {
     fn mul_assign(&mut self, rhs: f64) {
-        *self = self.clone() * rhs;
+        *self = *self * rhs;
     }
 }
 
 impl MulAssign<Self> for Vec3 {
     fn mul_assign(&mut self, rhs: Self) {
-        *self = self.clone() * rhs;
+        *self = *self * rhs;
     }
 }
 
@@ -93,7 +115,7 @@ impl Div<f64> for Vec3 {
 
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, rhs: f64) {
-        *self = self.clone() / rhs;
+        *self = *self / rhs;
     }
 }
 
@@ -125,9 +147,30 @@ mod tests {
     }
 
     #[test]
+    fn sub_works() {
+        let v1 = Vec3(1.0, 2.0, 3.0);
+        let v2 = Vec3(2.0, 4.0, -6.0);
+        assert_eq!(v1 - v2, Vec3(-1.0, -2.0, 9.0))
+    }
+
+    #[test]
+    fn sub_assign_works() {
+        let mut v1 = Vec3(1.0, 2.0, 3.0);
+        let v2 = Vec3(2.0, 4.0, -6.0);
+        v1 -= v2;
+        assert_eq!(v1, Vec3(-1.0, -2.0, 9.0))
+    }
+
+    #[test]
     fn mul_f64_works() {
         let v = Vec3(2.0, 4.0, -6.0);
         assert_eq!(v * -3.0, Vec3(-6.0, -12.0, 18.0))
+    }
+
+    #[test]
+    fn right_mul_f64_works() {
+        let v = Vec3(2.0, 4.0, -6.0);
+        assert_eq!(-3.0 * v, Vec3(-6.0, -12.0, 18.0))
     }
 
     #[test]
@@ -187,7 +230,7 @@ mod tests {
     fn dot_works() {
         let v1 = Vec3(1.0, 2.0, 3.0);
         let v2 = Vec3(2.0, 4.0, -6.0);
-        assert_eq!(v1.dot(&v2), -8.0)
+        assert_eq!(v1.dot(v2), -8.0)
     }
 
     #[test]
