@@ -1,4 +1,6 @@
-use crate::{color::Color, hittable::{Hittable, Sphere}, vec3::Vec3};
+use core::f64;
+
+use crate::{color::Color, hittable::HittableList, vec3::Vec3};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -26,13 +28,10 @@ impl Ray {
         self.origin.clone() + self.dir.clone() * t
     }
 
-    pub fn color(&self) -> Color {
-        let center = Vec3(0., 0., -1.);
-        let sphere = Sphere::new(center, 0.5);
-        match sphere.hit(self, 0., 1000.) {
-            Some(t) => {
-                let n = t.normal;
-                return 0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1.);
+    pub fn color(&self, world: &HittableList) -> Color {
+        match world.hit(self, 0., f64::INFINITY) {
+            Some(rec) => {
+                return 0.5 * (rec.normal + Vec3(1., 1., 1.))
             }
             None => {
                 let u = self.dir.unit();
