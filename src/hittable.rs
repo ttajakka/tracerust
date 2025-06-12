@@ -1,7 +1,13 @@
 use crate::{ray::Ray, vec3::Vec3};
 
+pub struct HitRecord {
+    pub point: Vec3,
+    pub normal: Vec3,
+    pub t: f64,
+}
+
 pub trait Hittable {
-    fn hit(&self, ray: &Ray) -> Option<f64>;
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -25,7 +31,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray) -> Option<f64> {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.dir().length_squared();
         let h = ray.dir().dot(oc);
@@ -33,9 +39,23 @@ impl Hittable for Sphere {
         // Check if the quadratic has solutions
         let disc = h * h - a * c;
 
-        match disc >= 0. {
-            false => None,
-            true => Some((h - disc.sqrt()) / a),
+        if disc < 0. {
+            return None;
         }
+
+        let sqrtd = disc.sqrt();
+        let root = (h - sqrtd) / a;
+        if root <= ray_tmin || root >= ray_tmax {
+            let root = (h + sqrtd) / a;
+            if root <= ray_tmin || root >= ray_tmax {
+                return None;
+            }
+        }
+
+        return Some(HitRecord {
+            point: ray.at(root),
+            normal: (ray.at(root) - self.center) / self.radius,
+            t: root,
+        });
     }
 }

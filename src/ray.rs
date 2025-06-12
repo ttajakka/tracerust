@@ -29,9 +29,9 @@ impl Ray {
     pub fn color(&self) -> Color {
         let center = Vec3(0., 0., -1.);
         let sphere = Sphere::new(center, 0.5);
-        match sphere.hit(self) {
+        match sphere.hit(self, 0., 1000.) {
             Some(t) => {
-                let n = (self.at(t) - center).unit();
+                let n = t.normal;
                 return 0.5 * Color::new(n.x() + 1., n.y() + 1., n.z() + 1.);
             }
             None => {
