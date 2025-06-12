@@ -27,10 +27,10 @@ impl PPM {
             .write(format!("P3\n{} {}\n255\n", w, h).as_bytes())
             .unwrap();
 
-        for i in 0..h {
-            eprint!("\rScanlines remaining: {} ", (h - i));
-            for j in 0..w {
-                self.pixels[(i * w + j) as usize].write_io(writer);
+        for j in 0..h {
+            eprint!("\rScanlines remaining: {} ", (h - j));
+            for i in 0..w {
+                self.pixels[(j * w + i) as usize].write_io(writer);
             }
         }
         eprint!("\rDone.                   \n");
