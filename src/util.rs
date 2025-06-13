@@ -1,5 +1,10 @@
 use crate::color::Color;
+use rand;
 use std::io::{BufWriter, Write};
+
+pub fn random_f64(min: f64, max: f64) -> f64 {
+    min + (max - min) * rand::random::<f64>()
+}
 
 pub struct PPM {
     width: u32,
@@ -79,7 +84,15 @@ mod tests {
         let mut writer = BufWriter::new(actual);
         ppm.write_to_buffer(&mut writer);
 
-        let expected = "P3\n2 2\n255\n0 255 0\n0 127 0\n0 0 0\n0 0 0\n".as_bytes();
+        let expected = "P3\n2 2\n255\n0 255 0\n0 128 0\n0 0 0\n0 0 0\n".as_bytes();
         assert_eq!(writer.buffer(), expected)
+    }
+
+    #[test]
+    fn random_f64_works() {
+        for _ in 0..100 {
+            let random = random_f64(2., 5.);
+            assert!(2. <= random && random < 5.)
+        }
     }
 }

@@ -1,4 +1,7 @@
+use crate::ray::Interval;
 use crate::vec3::Vec3;
+
+const INTENSITY: Interval = Interval{min: 0., max: 0.999};
 
 pub type Color = Vec3;
 
@@ -8,16 +11,9 @@ impl Color {
     }
 
     pub fn write_io<W: std::io::Write>(&self, w: &mut W) {
-        let rbyte = (255.999 * self.0) as u8;
-        let gbyte = (255.999 * self.1) as u8;
-        let bbyte = (255.999 * self.2) as u8;
-        writeln!(w, "{} {} {}", rbyte, gbyte, bbyte).unwrap();
-    }
-
-    pub fn write_fmt<W: std::fmt::Write>(&self, w: &mut W) {
-        let rbyte = (255.999 * self.0) as u8;
-        let gbyte = (255.999 * self.1) as u8;
-        let bbyte = (255.999 * self.2) as u8;
+        let rbyte = (256. * INTENSITY.clamp(self.0)) as u8;
+        let gbyte = (256. * INTENSITY.clamp(self.1)) as u8;
+        let bbyte = (256. * INTENSITY.clamp(self.2)) as u8;
         writeln!(w, "{} {} {}", rbyte, gbyte, bbyte).unwrap();
     }
 }
@@ -32,14 +28,6 @@ mod tests {
         let mut s = Vec::new();
         c.write_io(&mut s);
         let s = String::from_utf8(s).unwrap();
-        assert_eq!(s, "127 255 0\n");
-    }
-
-    #[test]
-    fn write_to_string_works() {
-        let c = Vec3(1.0, 0.5, 0.0);
-        let mut s = String::new();
-        c.write_fmt(&mut s);
-        assert_eq!(s, "255 127 0\n");
+        assert_eq!(s, "128 255 0\n");
     }
 }
