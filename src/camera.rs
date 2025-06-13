@@ -1,15 +1,18 @@
-use std::io::BufWriter;
 use crate::{color::Color, hittable::HittableList, ray::Interval, ray::Ray, util::PPM, vec3::Vec3};
+use rand;
+use std::io::BufWriter;
 
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: u32,
+    pub samples_per_pixel: u32,
 
     image_height: u32,
     center: Vec3,
     pixel00_loc: Vec3,
     pixel_delta_u: Vec3,
     pixel_delta_v: Vec3,
+    pixel_samples_scale: f64,
 }
 
 impl Camera {
@@ -19,19 +22,20 @@ impl Camera {
         let mut ppm = PPM::new(width, height);
         for j in 0..height {
             for i in 0..width {
-                let pixel_center =
-                    self.pixel00_loc + (i as f64) * self.pixel_delta_u + (j as f64) * self.pixel_delta_v;
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray::new(self.center, ray_direction);
+                let mut pixel_color = Color::new(0., 0., 0.);
+                for _ in 0..self.samples_per_pixel {
+                    let r = self.get_ray(i, j);
+                    pixel_color += Self::color_ray(&r, &world)
+                }
 
-                ppm.push(Self::color_ray(&ray, &world));
+                ppm.push(self.pixel_samples_scale * pixel_color);
             }
         }
 
         ppm.write_to_buffer(&mut BufWriter::new(std::io::stdout()));
     }
 
-    pub fn new(aspect_ratio: f64, image_width: u32) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Self {
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -54,15 +58,18 @@ impl Camera {
         let viewport_upper_left =
             center - Vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        let pixel_samples_scale = 1. / samples_per_pixel as f64;
 
         Self {
             aspect_ratio,
             image_width,
+            samples_per_pixel,
             image_height,
             center,
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            pixel_samples_scale,
         }
     }
 
@@ -81,5 +88,18 @@ impl Camera {
                 (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
             }
         }
+    }
+
+    fn get_ray(&self, i: u32, j: u32) -> Ray {
+        let offset = Camera::sample_square();
+        let pixel_sample = self.pixel00_loc
+            + (i as f64 + offset.x()) * self.pixel_delta_u
+            + (j as f64 + offset.y()) * self.pixel_delta_v;
+
+        Ray::new(self.center, pixel_sample - self.center)
+    }
+
+    fn sample_square() -> Vec3 {
+        Vec3(rand::random::<f64>() - 0.5, rand::random::<f64>() - 0.5, 0.)
     }
 }
