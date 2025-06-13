@@ -21,6 +21,7 @@ impl Camera {
         let height = self.image_height;
         let mut ppm = PPM::new(width, height);
         for j in 0..height {
+            eprint!("\rScanlines remaining: {} ", (height - j));
             for i in 0..width {
                 let mut pixel_color = Color::new(0., 0., 0.);
                 for _ in 0..self.samples_per_pixel {
@@ -31,6 +32,7 @@ impl Camera {
                 ppm.push(self.pixel_samples_scale * pixel_color);
             }
         }
+        eprint!("\rDone.                   \n");
 
         ppm.write_to_buffer(&mut BufWriter::new(std::io::stdout()));
     }

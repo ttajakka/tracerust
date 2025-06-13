@@ -33,12 +33,10 @@ impl PPM {
             .unwrap();
 
         for j in 0..h {
-            eprint!("\rScanlines remaining: {} ", (h - j));
             for i in 0..w {
                 self.pixels[(j * w + i) as usize].write_io(writer);
             }
         }
-        eprint!("\rDone.                   \n");
     }
 }
 
