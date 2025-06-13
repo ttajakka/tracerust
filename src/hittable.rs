@@ -1,4 +1,4 @@
-use crate::{ray::Ray, vec3::Vec3};
+use crate::{ray::{Interval, Ray}, vec3::Vec3};
 use std::rc::Rc;
 
 pub struct HitRecord {
@@ -36,7 +36,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord>;
 }
 
 pub struct HittableList {
@@ -52,13 +52,13 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let mut temp_rec = HitRecord::new(Vec3(0., 0., 0.), 0., *ray, Vec3(1., 0., 0.));
         let mut hit_anything = false;
-        let mut closest_so_far = ray_tmax;
+        let mut closest_so_far = ray_t.max;
 
         for o in &self.objects {
-            if let Some(rec) = o.hit(ray, ray_tmin, ray_tmax) {
+            if let Some(rec) = o.hit(ray, ray_t) {
                 hit_anything = true;
                 if rec.t < closest_so_far {
                     closest_so_far = rec.t;
@@ -95,7 +95,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.dir().length_squared();
         let h = ray.dir().dot(oc);
@@ -109,9 +109,9 @@ impl Hittable for Sphere {
 
         let sqrtd = disc.sqrt();
         let root = (h - sqrtd) / a;
-        if root <= ray_tmin || root >= ray_tmax {
+        if root <= ray_t.min || root >= ray_t.max {
             let root = (h + sqrtd) / a;
-            if root <= ray_tmin || root >= ray_tmax {
+            if root <= ray_t.min || root >= ray_t.max {
                 return None;
             }
         }
