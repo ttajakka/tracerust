@@ -25,7 +25,7 @@ impl Vec3 {
         self.length_squared().sqrt()
     }
 
-    pub fn dot(&self, other: Self) -> f64 {
+    pub fn dot(&self, other: &Self) -> f64 {
         self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
 
@@ -69,7 +69,7 @@ impl Vec3 {
 
     pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
         let on_unit_sphere = Vec3::random_unit_vector();
-        if on_unit_sphere.dot(normal) > 0.0 {
+        if on_unit_sphere.dot(&normal) > 0.0 {
             return on_unit_sphere;
         }
         -on_unit_sphere
@@ -78,6 +78,11 @@ impl Vec3 {
     pub fn near_zero(&self) -> bool {
         const EPS: f64 = 1e-8;
         return self.0.abs() < EPS && self.1.abs() < EPS && self.2.abs() < EPS;
+    }
+
+    // return the reflection of self across normal
+    pub fn reflect(&self, normal: &Self) -> Self {
+        *self - 2. * self.dot(normal) * *normal
     }
 }
 
@@ -270,7 +275,7 @@ mod tests {
     fn dot_works() {
         let v1 = Vec3(1.0, 2.0, 3.0);
         let v2 = Vec3(2.0, 4.0, -6.0);
-        assert_eq!(v1.dot(v2), -8.0)
+        assert_eq!(v1.dot(&v2), -8.0)
     }
 
     #[test]

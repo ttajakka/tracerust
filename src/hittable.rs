@@ -17,14 +17,14 @@ impl HitRecord {
     pub fn set_face_normal(&mut self, ray: Ray, outward_normal: Vec3) {
         // Sets the hit record normal vector.
         // NOTE: the parameter `outward_normal` is assumed to have unit length.
-        match ray.dir().dot(outward_normal) < 0. {
+        match ray.dir().dot(&outward_normal) < 0. {
             true => self.normal = outward_normal,
             false => self.normal = -outward_normal,
         }
     }
 
     pub fn new(point: Vec3, t: f64, ray: Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
-        let front_face = ray.dir().dot(outward_normal) < 0.;
+        let front_face = ray.dir().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
         } else {
@@ -100,7 +100,7 @@ impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let oc = self.center - ray.origin();
         let a = ray.dir().length_squared();
-        let h = ray.dir().dot(oc);
+        let h = ray.dir().dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
         // Check if the quadratic has solutions
         let disc = h * h - a * c;
