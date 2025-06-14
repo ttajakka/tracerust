@@ -3,6 +3,13 @@ use crate::vec3::Vec3;
 
 const INTENSITY: Interval = Interval{min: 0., max: 0.999};
 
+fn linear_to_gamma(linear_component: f64) -> f64 {
+    match linear_component > 0. {
+        true => linear_component.sqrt(),
+        false => 0.
+    }
+}
+
 pub type Color = Vec3;
 
 impl Color {
@@ -11,9 +18,13 @@ impl Color {
     }
 
     pub fn write_io<W: std::io::Write>(&self, w: &mut W) {
-        let rbyte = (256. * INTENSITY.clamp(self.0)) as u8;
-        let gbyte = (256. * INTENSITY.clamp(self.1)) as u8;
-        let bbyte = (256. * INTENSITY.clamp(self.2)) as u8;
+        let r = linear_to_gamma(self.0);
+        let g = linear_to_gamma(self.1);
+        let b = linear_to_gamma(self.2);
+
+        let rbyte = (256. * INTENSITY.clamp(r)) as u8;
+        let gbyte = (256. * INTENSITY.clamp(g)) as u8;
+        let bbyte = (256. * INTENSITY.clamp(b)) as u8;
         writeln!(w, "{} {} {}", rbyte, gbyte, bbyte).unwrap();
     }
 }
