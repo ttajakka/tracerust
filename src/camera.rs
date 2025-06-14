@@ -6,6 +6,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: u32,
     pub samples_per_pixel: u32,
+    pub max_depth: u32,
 
     image_height: u32,
     center: Vec3,
@@ -26,7 +27,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0., 0., 0.);
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color += Self::color_ray(&r, &world)
+                    pixel_color += Self::color_ray(&r, self.max_depth, &world)
                 }
 
                 ppm.push(self.pixel_samples_scale * pixel_color);
@@ -37,7 +38,12 @@ impl Camera {
         ppm.write_to_buffer(&mut BufWriter::new(std::io::stdout()));
     }
 
-    pub fn new(aspect_ratio: f64, image_width: u32, samples_per_pixel: u32) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u32,
+        samples_per_pixel: u32,
+        max_depth: u32,
+    ) -> Self {
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -66,6 +72,7 @@ impl Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
             image_height,
             center,
             pixel00_loc,
@@ -75,19 +82,22 @@ impl Camera {
         }
     }
 
-    pub fn color_ray(ray: &Ray, world: &HittableList) -> Color {
+    pub fn color_ray(ray: &Ray, depth: u32, world: &HittableList) -> Color {
+        if depth <= 0 {
+            return Color::new(0., 0., 0.);
+        }
         match world.hit(
             ray,
             &Interval {
-                min: 0.,
+                min: 0.001,
                 max: f64::INFINITY,
             },
         ) {
             Some(rec) => {
-                let direction = Vec3::random_on_hemisphere(rec.normal);
+                let direction = rec.normal + Vec3::random_on_hemisphere(rec.normal);
                 let new_ray = Ray::new(rec.point, direction);
-                return 0.5 * Camera::color_ray(&new_ray, world)
-            },
+                return 0.5 * Camera::color_ray(&new_ray, depth - 1, world);
+            }
             None => {
                 let u = ray.dir().unit();
                 let a = 0.5 * (u.y() + 1.0);
