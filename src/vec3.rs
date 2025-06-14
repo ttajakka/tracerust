@@ -1,4 +1,5 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign, Div, DivAssign, Mul, MulAssign, Neg};
+use crate::util::random_f64;
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -38,6 +39,40 @@ impl Vec3 {
 
     pub fn unit(&self) -> Self {
         *self / self.length()
+    }
+
+    pub fn random() -> Self {
+        Vec3(
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+            rand::random::<f64>(),
+        )
+    }
+
+    pub fn random_mm(min: f64, max: f64) -> Vec3 {
+        Vec3(
+            random_f64(min, max),
+            random_f64(min, max),
+            random_f64(min, max),
+        )
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        loop {
+            let p = Self::random();
+            let lensq = p.length_squared();
+            if 1e-160 <= lensq && lensq <= 1. {
+                return p / lensq.sqrt();
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        if on_unit_sphere.dot(normal) > 0.0 {
+            return on_unit_sphere
+        }
+        - on_unit_sphere
     }
 }
 

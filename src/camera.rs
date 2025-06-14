@@ -83,7 +83,11 @@ impl Camera {
                 max: f64::INFINITY,
             },
         ) {
-            Some(rec) => return 0.5 * (rec.normal + Vec3(1., 1., 1.)),
+            Some(rec) => {
+                let direction = Vec3::random_on_hemisphere(rec.normal);
+                let new_ray = Ray::new(rec.point, direction);
+                return 0.5 * Camera::color_ray(&new_ray, world)
+            },
             None => {
                 let u = ray.dir().unit();
                 let a = 0.5 * (u.y() + 1.0);
