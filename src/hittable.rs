@@ -1,4 +1,8 @@
-use crate::{ray::{Interval, Ray}, vec3::Vec3};
+use crate::{
+    material::Material,
+    ray::{Interval, Ray},
+    vec3::Vec3,
+};
 use std::rc::Rc;
 
 pub struct HitRecord {
@@ -6,6 +10,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub mat: Rc<dyn Material>,
 }
 
 impl HitRecord {
@@ -18,7 +23,7 @@ impl HitRecord {
         }
     }
 
-    pub fn new(point: Vec3, t: f64, ray: Ray, outward_normal: Vec3) -> Self {
+    pub fn new(point: Vec3, t: f64, ray: Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
         let front_face = ray.dir().dot(outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
@@ -31,6 +36,7 @@ impl HitRecord {
             normal,
             t,
             front_face,
+            mat: Rc::clone(&mat),
         }
     }
 }
@@ -53,36 +59,32 @@ impl HittableList {
     }
 
     pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
-        let mut temp_rec = HitRecord::new(Vec3(0., 0., 0.), 0., *ray, Vec3(1., 0., 0.));
-        let mut hit_anything = false;
+        let mut rec_out = None;
         let mut closest_so_far = ray_t.max;
 
         for o in &self.objects {
             if let Some(rec) = o.hit(ray, ray_t) {
-                hit_anything = true;
                 if rec.t < closest_so_far {
                     closest_so_far = rec.t;
-                    temp_rec = rec;
+                    rec_out = Some(rec);
                 }
             };
         }
 
-        match hit_anything {
-            true => Some(temp_rec),
-            false => None,
-        }
+        rec_out
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone)]
 pub struct Sphere {
     center: Vec3,
     radius: f64,
+    material: Rc<dyn Material>
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+        Sphere { center, radius, material: Rc::clone(&mat) }
     }
 
     pub fn center(&self) -> Vec3 {
@@ -121,6 +123,7 @@ impl Hittable for Sphere {
             root,
             *ray,
             (ray.at(root) - self.center) / self.radius,
+            Rc::clone(&self.material)
         ));
     }
 }

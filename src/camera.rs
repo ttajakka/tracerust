@@ -94,9 +94,12 @@ impl Camera {
             },
         ) {
             Some(rec) => {
-                let direction = rec.normal + Vec3::random_on_hemisphere(rec.normal);
-                let new_ray = Ray::new(rec.point, direction);
-                return 0.5 * Camera::color_ray(&new_ray, depth - 1, world);
+                match rec.mat.scatter(ray, &rec) {
+                    Some(scatres) => {
+                        return scatres.attenuation * Camera::color_ray(&scatres.scattered, depth-1, world)
+                    },
+                    None => return Color::new(0., 0., 0.)
+                }
             }
             None => {
                 let u = ray.dir().unit();

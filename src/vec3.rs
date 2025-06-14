@@ -70,9 +70,14 @@ impl Vec3 {
     pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
         let on_unit_sphere = Vec3::random_unit_vector();
         if on_unit_sphere.dot(normal) > 0.0 {
-            return on_unit_sphere
+            return on_unit_sphere;
         }
-        - on_unit_sphere
+        -on_unit_sphere
+    }
+
+    pub fn near_zero(&self) -> bool {
+        const EPS: f64 = 1e-8;
+        return self.0.abs() < EPS && self.1.abs() < EPS && self.2.abs() < EPS;
     }
 }
 
