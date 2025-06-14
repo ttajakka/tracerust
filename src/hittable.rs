@@ -83,8 +83,8 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
-        Sphere { center, radius, material: Rc::clone(&mat) }
+    pub fn new(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
+        Sphere { center, radius, material: Rc::clone(mat) }
     }
 
     pub fn center(&self) -> Vec3 {
