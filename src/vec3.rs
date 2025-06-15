@@ -84,6 +84,16 @@ impl Vec3 {
     pub fn reflect(&self, normal: &Self) -> Self {
         *self - 2. * self.dot(normal) * *normal
     }
+
+    // return the refraction of self across the boundary of materials
+    // whose normal is n and etai_over_etat is the ratio of the refactive
+    // indices. self and n should be a unit vectors.
+    pub fn refract(&self, n: &Self, etai_over_etat: f64) -> Self {
+        let cos_theta = -self.dot(&n);
+        let r_out_perp = etai_over_etat * (*self + cos_theta * *n);
+        let r_out_parallel = -(1. - r_out_perp.length_squared()).abs().sqrt() * *n;
+        r_out_perp + r_out_parallel
+    }
 }
 
 impl Add for Vec3 {
