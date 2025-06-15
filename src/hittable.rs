@@ -14,15 +14,6 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn set_face_normal(&mut self, ray: Ray, outward_normal: Vec3) {
-        // Sets the hit record normal vector.
-        // NOTE: the parameter `outward_normal` is assumed to have unit length.
-        match ray.dir().dot(&outward_normal) < 0. {
-            true => self.normal = outward_normal,
-            false => self.normal = -outward_normal,
-        }
-    }
-
     pub fn new(point: Vec3, t: f64, ray: Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
         let front_face = ray.dir().dot(&outward_normal) < 0.;
         let normal = if front_face {
@@ -110,9 +101,9 @@ impl Hittable for Sphere {
         }
 
         let sqrtd = disc.sqrt();
-        let root = (h - sqrtd) / a;
+        let mut root = (h - sqrtd) / a;
         if root <= ray_t.min || root >= ray_t.max {
-            let root = (h + sqrtd) / a;
+            root = (h + sqrtd) / a;
             if root <= ray_t.min || root >= ray_t.max {
                 return None;
             }
