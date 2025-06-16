@@ -42,11 +42,11 @@ fn main() {
 
     // Set up camera
     let aspect_ratio = 16.0_f64 / 9.0_f64;
-    let image_width = 400;
-    let samples_per_pixel = 50;
-    let max_depth = 10;
-    let vfov = 90.;
-    let lookfrom = Vec3(0., 0., 0.);
+    let image_width = 800;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let vfov = 40.;
+    let lookfrom = Vec3(-2., 2., 1.);
     let lookat = Vec3(0., 0., -1.);
     let vup = Vec3(0., 1., 0.);
 
