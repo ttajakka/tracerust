@@ -39,6 +39,6 @@ mod tests {
         let mut s = Vec::new();
         c.write_io(&mut s);
         let s = String::from_utf8(s).unwrap();
-        assert_eq!(s, "128 255 0\n");
+        assert_eq!(s, "181 255 0\n");
     }
 }

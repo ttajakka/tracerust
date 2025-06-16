@@ -86,7 +86,7 @@ mod tests {
         let mut writer = BufWriter::new(actual);
         ppm.write_to_buffer(&mut writer);
 
-        let expected = "P3\n2 2\n255\n0 255 0\n0 128 0\n0 0 0\n0 0 0\n".as_bytes();
+        let expected = "P3\n2 2\n255\n0 255 0\n0 181 0\n0 0 0\n0 0 0\n".as_bytes();
         assert_eq!(writer.buffer(), expected)
     }
 
