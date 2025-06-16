@@ -1,4 +1,4 @@
-use crate::{color::Color, hittable::HittableList, ray::Interval, ray::Ray, util::PPM, vec3::Vec3};
+use crate::{color::Color, hittable::HittableList, ray::{Interval, Ray}, util::{self, PPM}, vec3::Vec3};
 use rand;
 use std::io::BufWriter;
 
@@ -7,6 +7,7 @@ pub struct Camera {
     pub image_width: u32,
     pub samples_per_pixel: u32,
     pub max_depth: u32,
+    pub vfov: f64, /// vertical field of view in degrees
 
     image_height: u32,
     center: Vec3,
@@ -43,6 +44,7 @@ impl Camera {
         image_width: u32,
         samples_per_pixel: u32,
         max_depth: u32,
+        vfov: f64
     ) -> Self {
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
@@ -51,7 +53,10 @@ impl Camera {
         let center = Vec3(0., 0., 0.);
 
         let focal_length = 1.0_f64;
-        let viewport_height = 2.0_f64;
+
+        let theta = util::degrees_to_radians(vfov);
+        let h = (theta / 2.).tan();
+        let viewport_height = 2. * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64) / (image_height as f64);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -73,6 +78,7 @@ impl Camera {
             image_width,
             samples_per_pixel,
             max_depth,
+            vfov,
             image_height,
             center,
             pixel00_loc,

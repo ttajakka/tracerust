@@ -40,7 +40,7 @@ fn main() {
         &material_right,
     )));
 
-    let cam = Camera::new(16.0_f64 / 9.0_f64, 400, 100, 50);
+    let cam = Camera::new(16.0_f64 / 9.0_f64, 400, 100, 50, 90.);
 
     cam.render(world);
 }

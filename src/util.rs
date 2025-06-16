@@ -6,6 +6,10 @@ pub fn random_f64(min: f64, max: f64) -> f64 {
     min + (max - min) * rand::random::<f64>()
 }
 
+pub fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * std::f64::consts::PI / 180.
+}
+
 pub struct PPM {
     width: u32,
     height: u32,
