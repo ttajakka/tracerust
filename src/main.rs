@@ -30,8 +30,8 @@ fn main() {
         &material_left,
     )));
     world.add(Rc::new(Sphere::new(
-        Vec3(-1., 0.1, -1.),
-        0.3,
+        Vec3(-1., 0., -1.),
+        0.4,
         &material_bubble,
     )));
     world.add(Rc::new(Sphere::new(
@@ -45,10 +45,13 @@ fn main() {
     let image_width = 800;
     let samples_per_pixel = 100;
     let max_depth = 50;
-    let vfov = 40.;
+
+    let vfov = 20.;
     let lookfrom = Vec3(-2., 2., 1.);
     let lookat = Vec3(0., 0., -1.);
     let vup = Vec3(0., 1., 0.);
+    let defocus_angle = 5.;
+    let focus_distance = 3.4;
 
     let cam = Camera::new(
         aspect_ratio,
@@ -58,7 +61,9 @@ fn main() {
         vfov,
         lookfrom,
         lookat,
-        vup
+        vup,
+        focus_distance,
+        defocus_angle
     );
 
     cam.render(world);
