@@ -9,7 +9,8 @@ use tracerust::vec3::Vec3;
 fn main() {
     let material_ground: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.8, 0.8, 0.0)));
     let material_center: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.1, 0.2, 0.5)));
-    let material_left: Rc<dyn Material> = Rc::new(Dielectric::new(1. / 1.33));
+    let material_left: Rc<dyn Material> = Rc::new(Dielectric::new(1.5));
+    let material_bubble: Rc<dyn Material> = Rc::new(Dielectric::new(1.0 / 1.5));
     let material_right: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.8, 0.6, 0.2), 0.5));
 
     let mut world = HittableList { objects: vec![] };
@@ -27,6 +28,11 @@ fn main() {
         Vec3(-1., 0., -1.),
         0.5,
         &material_left,
+    )));
+    world.add(Rc::new(Sphere::new(
+        Vec3(-1., 0.1, -1.),
+        0.3,
+        &material_bubble,
     )));
     world.add(Rc::new(Sphere::new(
         Vec3(1., 0., -1.),
