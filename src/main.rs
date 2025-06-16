@@ -5,6 +5,7 @@ use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
 use tracerust::material::{Dielectric, Lambertian, Material, Metal};
 use tracerust::vec3::Vec3;
+use tracerust::util;
 
 fn main() {
     let mut world = HittableList { objects: vec![] };
@@ -15,6 +16,39 @@ fn main() {
         1000.,
         &ground_material,
     )));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = rand::random::<f64>();
+            let center = Vec3(
+                a as f64 + 0.9 * rand::random::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rand::random::<f64>(),
+            );
+
+            if (center - Vec3(4., 0.2, 0.)).length() > 0.9 {
+                if choose_mat < 0.8 {
+                    //  diffuse
+                    let albedo = Color::random() * Color::random();
+                    let material: Rc<dyn Material> = Rc::new(Lambertian::new(albedo));
+                    let sphere = Sphere::new(center, 0.2, &material);
+                    world.add(Rc::new(sphere));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::random_mm(0.5, 1.);
+                    let fuzz = util::random_f64(0., 0.5);
+                    let material: Rc<dyn Material> = Rc::new(Metal::new(albedo, fuzz));
+                    let sphere = Sphere::new(center, 0.2, &material);
+                    world.add(Rc::new(sphere));
+                } else {
+                    // glass
+                    let material: Rc<dyn Material> = Rc::new(Dielectric::new(1.5));
+                    let sphere = Sphere::new(center, 0.2, &material);
+                    world.add(Rc::new(sphere));
+                }
+            }
+        }
+    }
 
     let material_1: Rc<dyn Material> = Rc::new(Dielectric::new(1.5));
     world.add(Rc::new(Sphere::new(Vec3(0., 1., 0.), 1., &material_1)));
