@@ -33,7 +33,7 @@ impl Vec3 {
         Self(
             self.1 * other.2 - self.2 * other.1,
             self.2 * other.0 - self.0 * other.2,
-            self.0 * other.1 - self.1 - other.0,
+            self.0 * other.1 - self.1 * other.0,
         )
     }
 
@@ -290,9 +290,12 @@ mod tests {
 
     #[test]
     fn cross_works() {
-        let v1 = Vec3(1.0, 0.0, 0.0);
-        let v2 = Vec3(0.0, 1.0, 0.0);
-        assert_eq!(v1.cross(&v2), Vec3(0.0, 0.0, 1.0))
+        let u = Vec3(1., 0., 0.);
+        let v = Vec3(0., 1., 0.);
+        let w = Vec3(0., 0., 1.);
+        assert_eq!(u.cross(&v), w);
+        assert_eq!(v.cross(&w), u);
+        assert_eq!(w.cross(&u), v);
     }
 
     #[test]

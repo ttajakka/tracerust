@@ -1,20 +1,29 @@
-use crate::{color::Color, hittable::HittableList, ray::{Interval, Ray}, util::{self, PPM}, vec3::Vec3};
+use crate::{
+    color::Color,
+    hittable::HittableList,
+    ray::{Interval, Ray},
+    util::{self, PPM},
+    vec3::Vec3,
+};
 use rand;
 use std::io::BufWriter;
 
 pub struct Camera {
-    pub aspect_ratio: f64,
-    pub image_width: u32,
-    pub samples_per_pixel: u32,
-    pub max_depth: u32,
-    pub vfov: f64, /// vertical field of view in degrees
+    pub aspect_ratio: f64,      // Ratio of image width over height
+    pub image_width: u32,       // Rendered image width in pixel count
+    pub samples_per_pixel: u32, // Count of random samples for each pixel
+    pub max_depth: u32,         // Maximum number of ray bounces into scene
+    pub vfov: f64,              // vertical field of view in degrees
+    pub lookfrom: Vec3,         // Point camera is looking from
+    pub lookat: Vec3,           // Point camera is looking at
+    pub vup: Vec3,              // Camera-relative "up" direction
 
-    image_height: u32,
-    center: Vec3,
-    pixel00_loc: Vec3,
-    pixel_delta_u: Vec3,
-    pixel_delta_v: Vec3,
-    pixel_samples_scale: f64,
+    image_height: u32,        // Rendered image height
+    pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
+    center: Vec3,             // Camera center
+    pixel00_loc: Vec3,        // Location of pixel 0, 0
+    pixel_delta_u: Vec3,      // Offset to pixel to the right
+    pixel_delta_v: Vec3,      // Offset to pixel below
 }
 
 impl Camera {
@@ -44,32 +53,39 @@ impl Camera {
         image_width: u32,
         samples_per_pixel: u32,
         max_depth: u32,
-        vfov: f64
+        vfov: f64,
+        lookfrom: Vec3,
+        lookat: Vec3,
+        vup: Vec3,
     ) -> Self {
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
         let image_height = if image_height < 1 { 1 } else { image_height };
 
-        let center = Vec3(0., 0., 0.);
+        let center = lookfrom;
 
-        let focal_length = 1.0_f64;
-
+        // Determine viewport dimensions
+        let focal_length = (lookfrom - lookat).length();
         let theta = util::degrees_to_radians(vfov);
         let h = (theta / 2.).tan();
         let viewport_height = 2. * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64) / (image_height as f64);
 
+        // Calculate the bases vectors u, v, w for the camera coordinate frame.
+        let w = (lookfrom - lookat).unit();
+        let u = vup.cross(&w).unit();
+        let v = w.cross(&u);
+
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
-        let viewport_u = Vec3(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3(0.0, -viewport_height, 0.0);
+        let viewport_u = viewport_width * u;
+        let viewport_v = -viewport_height * v;
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         let pixel_delta_u = viewport_u / image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
 
         // Calculate the location of the upper left pixel.
-        let viewport_upper_left =
-            center - Vec3(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = center - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
         let pixel_samples_scale = 1. / samples_per_pixel as f64;
 
@@ -85,6 +101,9 @@ impl Camera {
             pixel_delta_u,
             pixel_delta_v,
             pixel_samples_scale,
+            lookfrom,
+            lookat,
+            vup,
         }
     }
 
@@ -99,14 +118,13 @@ impl Camera {
                 max: f64::INFINITY,
             },
         ) {
-            Some(rec) => {
-                match rec.mat.scatter(ray, &rec) {
-                    Some(scatres) => {
-                        return scatres.attenuation * Camera::color_ray(&scatres.scattered, depth-1, world)
-                    },
-                    None => return Color::new(0., 0., 0.)
+            Some(rec) => match rec.mat.scatter(ray, &rec) {
+                Some(scatres) => {
+                    return scatres.attenuation
+                        * Camera::color_ray(&scatres.scattered, depth - 1, world);
                 }
-            }
+                None => return Color::new(0., 0., 0.),
+            },
             None => {
                 let u = ray.dir().unit();
                 let a = 0.5 * (u.y() + 1.0);

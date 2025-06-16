@@ -40,7 +40,26 @@ fn main() {
         &material_right,
     )));
 
-    let cam = Camera::new(16.0_f64 / 9.0_f64, 400, 100, 50, 90.);
+    // Set up camera
+    let aspect_ratio = 16.0_f64 / 9.0_f64;
+    let image_width = 400;
+    let samples_per_pixel = 50;
+    let max_depth = 10;
+    let vfov = 90.;
+    let lookfrom = Vec3(0., 0., 0.);
+    let lookat = Vec3(0., 0., -1.);
+    let vup = Vec3(0., 1., 0.);
+
+    let cam = Camera::new(
+        aspect_ratio,
+        image_width,
+        samples_per_pixel,
+        max_depth,
+        vfov,
+        lookfrom,
+        lookat,
+        vup
+    );
 
     cam.render(world);
 }
