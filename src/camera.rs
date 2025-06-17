@@ -158,7 +158,7 @@ impl Camera {
         } else {
             self.defocus_disk_sample()
         };
-        Ray::new(origin, pixel_sample - origin)
+        Ray::new(origin, pixel_sample - origin, rand::random())
     }
 
     fn sample_square() -> Vec3 {

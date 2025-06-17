@@ -68,18 +68,24 @@ impl HittableList {
 
 #[derive(Clone)]
 pub struct Sphere {
-    center: Vec3,
+    center: Ray,
     radius: f64,
     material: Rc<dyn Material>
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
-        Sphere { center, radius, material: Rc::clone(mat) }
+    pub fn stationary(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
+        let center = Ray::new(center, Vec3(0., 0., 0.), 0.);
+        Self { center, radius, material: Rc::clone(mat) }
     }
 
-    pub fn center(&self) -> Vec3 {
-        self.center
+    pub fn moving(center1: Vec3, center2: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
+        let center = Ray::new(center1, center2 - center1, 0.);
+        Self { center, radius, material: Rc::clone(mat) }
+    }
+
+    pub fn center(&self) -> Ray {
+        self.center.clone()
     }
 
     pub fn radius(&self) -> f64 {
@@ -89,7 +95,8 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
-        let oc = self.center - ray.origin();
+        let current_center = self.center.at(ray.time()); 
+        let oc = current_center - ray.origin();
         let a = ray.dir().length_squared();
         let h = ray.dir().dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -113,7 +120,7 @@ impl Hittable for Sphere {
             ray.at(root),
             root,
             ray,
-            (ray.at(root) - self.center) / self.radius,
+            (ray.at(root) - current_center) / self.radius,
             Rc::clone(&self.material)
         ));
     }
