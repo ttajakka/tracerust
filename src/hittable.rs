@@ -14,7 +14,7 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(point: Vec3, t: f64, ray: Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(point: Vec3, t: f64, ray: &Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
         let front_face = ray.dir().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
@@ -112,7 +112,7 @@ impl Hittable for Sphere {
         return Some(HitRecord::new(
             ray.at(root),
             root,
-            *ray,
+            ray,
             (ray.at(root) - self.center) / self.radius,
             Rc::clone(&self.material)
         ));

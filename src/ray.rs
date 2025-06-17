@@ -2,7 +2,7 @@ use core::f64;
 
 use crate::vec3::Vec3;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Ray {
     origin: Vec3,
     dir: Vec3,
