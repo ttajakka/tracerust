@@ -123,13 +123,7 @@ impl Camera {
         if depth <= 0 {
             return Color::new(0., 0., 0.);
         }
-        match world.hit(
-            ray,
-            &Interval {
-                min: 0.001,
-                max: f64::INFINITY,
-            },
-        ) {
+        match world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
             Some(rec) => match rec.mat.scatter(ray, &rec) {
                 Some(scatres) => {
                     return scatres.attenuation

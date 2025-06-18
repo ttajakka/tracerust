@@ -1,5 +1,6 @@
 use crate::{bvh::AABB, material::Material, ray::Ray, util::Interval, vec3::Vec3};
 use std::rc::Rc;
+use std::cmp::{ Ordering};
 
 pub struct HitRecord {
     pub point: Vec3,
@@ -40,14 +41,29 @@ pub trait Hittable {
     fn bounding_box(&self) -> &AABB;
 }
 
+pub fn box_compare(a: &Rc::<dyn Hittable>, b: &Rc::<dyn Hittable>, axis_index: usize) -> Ordering {
+    let a_axis_interval = a.bounding_box().axis_interval(axis_index);
+    let b_axis_interval = b.bounding_box().axis_interval(axis_index);
+
+    if a_axis_interval.min() < b_axis_interval.min() {
+        return Ordering::Less
+    } else {
+        return Ordering::Greater
+    }
+}
+
 pub struct HittableList {
-    objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Rc<dyn Hittable>>,
     bbox: AABB
 }
 
 impl HittableList {
     pub fn new() -> Self {
         Self { objects: vec![], bbox: AABB::empty()}
+    }
+
+    pub fn count(&self) -> usize {
+        self.objects.len()
     }
 
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
@@ -61,7 +77,7 @@ impl HittableList {
 
     pub fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
         let mut rec_out = None;
-        let mut closest_so_far = ray_t.max;
+        let mut closest_so_far = ray_t.max();
 
         for o in &self.objects {
             if let Some(rec) = o.hit(ray, ray_t) {
@@ -144,9 +160,9 @@ impl Hittable for Sphere {
 
         let sqrtd = disc.sqrt();
         let mut root = (h - sqrtd) / a;
-        if root <= ray_t.min || root >= ray_t.max {
+        if root <= ray_t.min() || root >= ray_t.max() {
             root = (h + sqrtd) / a;
-            if root <= ray_t.min || root >= ray_t.max {
+            if root <= ray_t.min() || root >= ray_t.max() {
                 return None;
             }
         }

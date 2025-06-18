@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use tracerust::bvh::BVHNode;
 use tracerust::camera::Camera;
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
@@ -58,6 +59,12 @@ fn main() {
         &material_1,
     )));
 
+    let material_3: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
+    world.add(Rc::new(Sphere::stationary(
+        Vec3(4., 1., 0.),
+        1.0,
+        &material_3,
+    )));
     let material_2: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
     world.add(Rc::new(Sphere::stationary(
         Vec3(-4., 1., 0.),
@@ -65,17 +72,14 @@ fn main() {
         &material_2,
     )));
 
-    let material_3: Rc<dyn Material> = Rc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
-    world.add(Rc::new(Sphere::stationary(
-        Vec3(4., 1., 0.),
-        1.0,
-        &material_3,
-    )));
+    let mut new_world = HittableList::new();
+    let count = world.count();
+    new_world.add(Rc::new(BVHNode::new(&mut world.objects, 0, count)));
 
     // Set up camera
     let aspect_ratio = 16.0_f64 / 9.0_f64;
-    let image_width = 200;
-    let samples_per_pixel = 10;
+    let image_width = 800;
+    let samples_per_pixel = 100;
     let max_depth = 50;
 
     let vfov = 20.;
@@ -98,5 +102,6 @@ fn main() {
         defocus_angle,
     );
 
-    cam.render(world);
+    cam.render(new_world);
+    // cam.render(world);
 }

@@ -1,12 +1,11 @@
-use crate::util::Interval;
+use crate::util::INTENSITY;
 use crate::vec3::Vec3;
 
-const INTENSITY: Interval = Interval{min: 0., max: 0.999};
 
 fn linear_to_gamma(linear_component: f64) -> f64 {
     match linear_component > 0. {
         true => linear_component.sqrt(),
-        false => 0.
+        false => 0.,
     }
 }
 

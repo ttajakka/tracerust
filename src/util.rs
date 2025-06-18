@@ -10,10 +10,10 @@ pub fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * std::f64::consts::PI / 180.
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Interval {
-    pub min: f64,
-    pub max: f64,
+    min: f64,
+    max: f64,
 }
 
 impl Default for Interval {
@@ -25,10 +25,28 @@ impl Default for Interval {
     }
 }
 
+pub const INTENSITY: Interval = Interval {
+    min: 0.,
+    max: 0.999,
+};
+
 impl Interval {
+    pub fn new(min: f64, max: f64) -> Self {
+        assert!(min <= max);
+        Self { min, max }
+    }
+
+    pub fn min(&self) -> f64 {
+        self.min
+    }
+
+    pub fn max(&self) -> f64 {
+        self.max
+    }
+
     pub fn from_intervals(a: &Interval, b: &Interval) -> Self {
         let min = if a.min <= b.min { a.min } else { b.min };
-        let max = if a.max <= b.max { a.max } else { b.max };
+        let max = if a.max <= b.max { b.max } else { a.max };
         Interval { min, max }
     }
 
