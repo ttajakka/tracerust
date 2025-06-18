@@ -26,6 +26,12 @@ impl Default for Interval {
 }
 
 impl Interval {
+    pub fn from_intervals(a: &Interval, b: &Interval) -> Self {
+        let min = if a.min <= b.min { a.min } else { b.min };
+        let max = if a.max <= b.max { a.max } else { b.max };
+        Interval { min, max }
+    }
+
     pub fn size(&self) -> f64 {
         self.max - self.min
     }
@@ -153,7 +159,6 @@ mod tests {
             assert!(2. <= random && random < 5.)
         }
     }
-
 
     #[test]
     fn size_works() {

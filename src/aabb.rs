@@ -9,6 +9,7 @@ use crate::{
 /// Representes a 3-dimensional parallelepiped
 /// bounded by three pairs of plains, each pair
 /// aligned with a coordinate plane and defined by an Interval.
+#[derive(Clone)]
 pub struct AABB {
     pub x: Interval,
     pub y: Interval,
@@ -51,6 +52,13 @@ impl AABB {
             Interval { min: b.2, max: a.2 }
         };
         Self { x, y, z }
+    }
+
+    pub fn from_boxes(box1: &Self, box2: &Self) -> Self {
+        let x = Interval::from_intervals(&box1.x, &box2.x);
+        let y = Interval::from_intervals(&box1.y, &box2.y);
+        let z = Interval::from_intervals(&box1.z, &box2.z);
+        Self {x, y, z}
     }
 
     /// Returns a requested axis interval
