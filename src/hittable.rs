@@ -41,11 +41,17 @@ pub trait Hittable {
 }
 
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    objects: Vec<Rc<dyn Hittable>>,
+    bbox: AABB
 }
 
 impl HittableList {
+    pub fn new() -> Self {
+        Self { objects: vec![], bbox: AABB::empty()}
+    }
+
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.bbox = AABB::from_boxes(&self.bbox, object.bounding_box());
         self.objects.push(object);
     }
 
@@ -67,6 +73,16 @@ impl HittableList {
         }
 
         rec_out
+    }
+}
+
+impl Hittable for HittableList {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        self.hit(ray, ray_t)
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
     }
 }
 

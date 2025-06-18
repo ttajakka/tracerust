@@ -8,7 +8,7 @@ use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let mut world = HittableList { objects: vec![] };
+    let mut world = HittableList::new();
 
     let ground_material: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
     world.add(Rc::new(Sphere::stationary(
