@@ -1,8 +1,8 @@
 use crate::{
     color::Color,
     hittable::HittableList,
-    ray::{Interval, Ray},
-    util::{self, PPM, degrees_to_radians},
+    ray::Ray,
+    util::{Interval, PPM, degrees_to_radians},
     vec3::Vec3,
 };
 use rand;
@@ -70,7 +70,7 @@ impl Camera {
         let center = lookfrom;
 
         // Determine viewport dimensions
-        let theta = util::degrees_to_radians(vfov);
+        let theta = degrees_to_radians(vfov);
         let h = (theta / 2.).tan();
         let viewport_height = 2. * h * focus_distance;
         let viewport_width = viewport_height * (image_width as f64) / (image_height as f64);

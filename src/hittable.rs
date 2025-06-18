@@ -1,8 +1,4 @@
-use crate::{
-    material::Material,
-    ray::{Interval, Ray},
-    vec3::Vec3,
-};
+use crate::{material::Material, ray::Ray, util::Interval, vec3::Vec3};
 use std::rc::Rc;
 
 pub struct HitRecord {
@@ -14,7 +10,13 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
-    pub fn new(point: Vec3, t: f64, ray: &Ray, outward_normal: Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(
+        point: Vec3,
+        t: f64,
+        ray: &Ray,
+        outward_normal: Vec3,
+        mat: Rc<dyn Material>,
+    ) -> Self {
         let front_face = ray.dir().dot(&outward_normal) < 0.;
         let normal = if front_face {
             outward_normal
@@ -70,18 +72,26 @@ impl HittableList {
 pub struct Sphere {
     center: Ray,
     radius: f64,
-    material: Rc<dyn Material>
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
     pub fn stationary(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
         let center = Ray::new(center, Vec3(0., 0., 0.), 0.);
-        Self { center, radius, material: Rc::clone(mat) }
+        Self {
+            center,
+            radius,
+            material: Rc::clone(mat),
+        }
     }
 
     pub fn moving(center1: Vec3, center2: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
         let center = Ray::new(center1, center2 - center1, 0.);
-        Self { center, radius, material: Rc::clone(mat) }
+        Self {
+            center,
+            radius,
+            material: Rc::clone(mat),
+        }
     }
 
     pub fn center(&self) -> Ray {
@@ -95,7 +105,7 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
-        let current_center = self.center.at(ray.time()); 
+        let current_center = self.center.at(ray.time());
         let oc = current_center - ray.origin();
         let a = ray.dir().length_squared();
         let h = ray.dir().dot(&oc);
@@ -121,7 +131,7 @@ impl Hittable for Sphere {
             root,
             ray,
             (ray.at(root) - current_center) / self.radius,
-            Rc::clone(&self.material)
+            Rc::clone(&self.material),
         ));
     }
 }

@@ -74,8 +74,8 @@ fn main() {
 
     // Set up camera
     let aspect_ratio = 16.0_f64 / 9.0_f64;
-    let image_width = 400;
-    let samples_per_pixel = 100;
+    let image_width = 200;
+    let samples_per_pixel = 10;
     let max_depth = 50;
 
     let vfov = 20.;

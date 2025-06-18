@@ -1,4 +1,4 @@
-use crate::ray::Interval;
+use crate::util::Interval;
 use crate::vec3::Vec3;
 
 const INTENSITY: Interval = Interval{min: 0., max: 0.999};
