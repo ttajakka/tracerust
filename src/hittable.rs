@@ -1,4 +1,4 @@
-use crate::{aabb::AABB, material::Material, ray::Ray, util::Interval, vec3::Vec3};
+use crate::{bvh::AABB, material::Material, ray::Ray, util::Interval, vec3::Vec3};
 use std::rc::Rc;
 
 pub struct HitRecord {

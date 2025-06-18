@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use crate::{
+    hittable::{HitRecord, Hittable},
     ray::Ray,
     util::{EMPTY, Interval},
     vec3::Vec3,
@@ -58,7 +61,7 @@ impl AABB {
         let x = Interval::from_intervals(&box1.x, &box2.x);
         let y = Interval::from_intervals(&box1.y, &box2.y);
         let z = Interval::from_intervals(&box1.z, &box2.z);
-        Self {x, y, z}
+        Self { x, y, z }
     }
 
     /// Returns a requested axis interval
@@ -110,13 +113,41 @@ impl AABB {
     }
 }
 
+pub struct BVHNode {
+    left: Rc<dyn Hittable>,
+    right: Rc<dyn Hittable>,
+    bbox: AABB,
+}
+
+impl Hittable for BVHNode {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        if !self.bbox.hit(ray, ray_t) {
+            return None;
+        };
+
+        if let Some(hit) = self.right.hit(ray, ray_t) {
+            return Some(hit);
+        };
+
+        if let Some(hit) = self.left.hit(ray, ray_t) {
+            return Some(hit);
+        };
+
+        None
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn hit_works() {
-        let x= Interval { min: -1., max: 1. };
+        let x = Interval { min: -1., max: 1. };
         let y = x.clone();
         let z = x.clone();
         let aabb = AABB::new(x, y, z);
@@ -125,7 +156,7 @@ mod tests {
         let dir = Vec3(0., 0., 1.);
         let ray = Ray::new(origin, dir, 0.);
 
-        let ray_t= Interval {min: 0., max: 100.};
+        let ray_t = Interval { min: 0., max: 100. };
         assert!(aabb.hit(&ray, &ray_t));
 
         let origin = Vec3(1., 1., -5.);
