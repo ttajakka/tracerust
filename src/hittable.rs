@@ -62,6 +62,10 @@ impl HittableList {
         Self { objects: vec![], bbox: AABB::empty()}
     }
 
+    pub fn from_hittable(bvh: Rc<dyn Hittable>) -> Self {
+        Self { objects: vec![Rc::clone(&bvh)], bbox: bvh.bounding_box().clone()}
+    }
+
     pub fn count(&self) -> usize {
         self.objects.len()
     }

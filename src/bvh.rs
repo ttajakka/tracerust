@@ -121,7 +121,7 @@ pub struct BVHNode {
 }
 
 impl BVHNode {
-    pub fn new(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
+    pub fn new(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Rc<Self> {
         let axis_index: usize = rand::random_range(0..3);
         let span = end - start;
 
@@ -138,13 +138,13 @@ impl BVHNode {
             objects.sort_by(|a, b| hittable::box_compare(a, b, axis_index));
 
             let mid = start + span / 2;
-            left = Rc::new(BVHNode::new(objects, start, mid));
-            right = Rc::new(BVHNode::new(objects, mid, end));
+            left = BVHNode::new(objects, start, mid);
+            right = BVHNode::new(objects, mid, end);
         }
 
         let bbox = AABB::from_boxes(left.bounding_box(), right.bounding_box());
 
-        Self { left, right, bbox }
+        Rc::new(Self { left, right, bbox })
     }
 }
 

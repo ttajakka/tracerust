@@ -72,15 +72,17 @@ fn main() {
         &material_2,
     )));
 
-    let mut new_world = HittableList::new();
     let count = world.count();
-    new_world.add(Rc::new(BVHNode::new(&mut world.objects, 0, count)));
+    let world = HittableList::from_hittable(BVHNode::new(&mut world.objects, 0, count));
 
     // Set up camera
     let aspect_ratio = 16.0_f64 / 9.0_f64;
-    let image_width = 800;
-    let samples_per_pixel = 100;
-    let max_depth = 50;
+    // let image_width = 800;
+    // let samples_per_pixel = 100;
+    // let max_depth = 50;
+    let image_width = 400;
+    let samples_per_pixel = 20;
+    let max_depth= 20;
 
     let vfov = 20.;
     let lookfrom = Vec3(13., 2., 3.);
@@ -102,6 +104,5 @@ fn main() {
         defocus_angle,
     );
 
-    cam.render(new_world);
-    // cam.render(world);
+    cam.render(world);
 }
