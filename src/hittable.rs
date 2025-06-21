@@ -5,9 +5,11 @@ use std::cmp::{ Ordering};
 pub struct HitRecord {
     pub point: Vec3,
     pub normal: Vec3,
-    pub t: f64,
-    pub front_face: bool,
     pub mat: Rc<dyn Material>,
+    pub t: f64,
+    pub u: f64,
+    pub v: f64,
+    pub front_face: bool,
 }
 
 impl HitRecord {
@@ -28,9 +30,11 @@ impl HitRecord {
         HitRecord {
             point,
             normal,
-            t,
-            front_face,
             mat: Rc::clone(&mat),
+            t,
+            u: 0.,
+            v: 0.,
+            front_face,
         }
     }
 }
@@ -115,18 +119,18 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn stationary(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
+    pub fn stationary(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
         let center_ray = Ray::new(center, Vec3(0., 0., 0.), 0.);
         let rvec = Vec3(radius, radius, radius);
         Self {
             center: center_ray,
             radius,
-            material: Rc::clone(mat),
+            material: Rc::clone(&mat),
             bbox: AABB::from_points(center - rvec, center + rvec)
         }
     }
 
-    pub fn moving(center1: Vec3, center2: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
+    pub fn moving(center1: Vec3, center2: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
         let center = Ray::new(center1, center2 - center1, 0.);
         let rvec = Vec3(radius, radius, radius);
         let box1 = AABB::from_points(center.at(0.) - rvec, center.at(0.) + rvec);
@@ -134,7 +138,7 @@ impl Sphere {
         Self {
             center,
             radius,
-            material: Rc::clone(mat),
+            material: Rc::clone(&mat),
             bbox: AABB::from_boxes(&box1, &box2)
         }
     }

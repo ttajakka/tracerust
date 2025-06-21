@@ -1,4 +1,12 @@
-use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
+use std::rc::Rc;
+
+use crate::{
+    color::Color,
+    hittable::HitRecord,
+    ray::Ray,
+    texture::{SolidColor, Texture},
+    vec3::Vec3,
+};
 
 pub struct ScatterResult {
     pub scattered: Ray,
@@ -10,12 +18,20 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    albedo: Color,
+    tex: Rc<dyn Texture>,
 }
 
 impl Lambertian {
     pub fn new(albedo: Color) -> Self {
-        Self { albedo }
+        Self {
+            tex: Rc::new(SolidColor::new(albedo)),
+        }
+    }
+
+    pub fn from_texture(tex: Rc<dyn Texture>) -> Self {
+        Self {
+            tex: Rc::clone(&tex),
+        }
     }
 }
 
@@ -28,7 +44,7 @@ impl Material for Lambertian {
         let scattered = Ray::new(rec.point, scattered_direction, r_in.time());
         Some(ScatterResult {
             scattered,
-            attenuation: self.albedo,
+            attenuation: self.tex.value(rec.u, rec.v, rec.point),
         })
     }
 }
@@ -95,12 +111,11 @@ impl Material for Dielectric {
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
         let cannot_refract = ri * sin_theta > 1.;
 
-        let dir =
-            if cannot_refract || Self::reflectance(cos_theta, ri) > rand::random::<f64>() {
-                unit_direction.reflect(&rec.normal)
-            } else {
-                unit_direction.refract(&rec.normal.unit(), ri).unit()
-            };
+        let dir = if cannot_refract || Self::reflectance(cos_theta, ri) > rand::random::<f64>() {
+            unit_direction.reflect(&rec.normal)
+        } else {
+            unit_direction.refract(&rec.normal.unit(), ri).unit()
+        };
 
         Some(ScatterResult {
             scattered: Ray::new(rec.point, dir, r_in.time()),
