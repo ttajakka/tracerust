@@ -1,6 +1,9 @@
 use crate::{bvh::AABB, material::Material, ray::Ray, util::Interval, vec3::Vec3};
+use std::cmp::Ordering;
+use std::f64;
 use std::rc::Rc;
-use std::cmp::{ Ordering};
+
+const PI: f64 = f64::consts::PI;
 
 pub struct HitRecord {
     pub point: Vec3,
@@ -18,6 +21,8 @@ impl HitRecord {
         t: f64,
         ray: &Ray,
         outward_normal: Vec3,
+        u: f64,
+        v: f64,
         mat: Rc<dyn Material>,
     ) -> Self {
         let front_face = ray.dir().dot(&outward_normal) < 0.;
@@ -32,8 +37,8 @@ impl HitRecord {
             normal,
             mat: Rc::clone(&mat),
             t,
-            u: 0.,
-            v: 0.,
+            u,
+            v,
             front_face,
         }
     }
@@ -45,29 +50,35 @@ pub trait Hittable {
     fn bounding_box(&self) -> &AABB;
 }
 
-pub fn box_compare(a: &Rc::<dyn Hittable>, b: &Rc::<dyn Hittable>, axis_index: usize) -> Ordering {
+pub fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis_index: usize) -> Ordering {
     let a_axis_interval = a.bounding_box().axis_interval(axis_index);
     let b_axis_interval = b.bounding_box().axis_interval(axis_index);
 
     if a_axis_interval.min() < b_axis_interval.min() {
-        return Ordering::Less
+        return Ordering::Less;
     } else {
-        return Ordering::Greater
+        return Ordering::Greater;
     }
 }
 
 pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
-    bbox: AABB
+    bbox: AABB,
 }
 
 impl HittableList {
     pub fn new() -> Self {
-        Self { objects: vec![], bbox: AABB::empty()}
+        Self {
+            objects: vec![],
+            bbox: AABB::empty(),
+        }
     }
 
     pub fn from_hittable(bvh: Rc<dyn Hittable>) -> Self {
-        Self { objects: vec![Rc::clone(&bvh)], bbox: bvh.bounding_box().clone()}
+        Self {
+            objects: vec![Rc::clone(&bvh)],
+            bbox: bvh.bounding_box().clone(),
+        }
     }
 
     pub fn count(&self) -> usize {
@@ -115,7 +126,7 @@ pub struct Sphere {
     center: Ray,
     radius: f64,
     material: Rc<dyn Material>,
-    bbox: AABB
+    bbox: AABB,
 }
 
 impl Sphere {
@@ -126,7 +137,7 @@ impl Sphere {
             center: center_ray,
             radius,
             material: Rc::clone(&mat),
-            bbox: AABB::from_points(center - rvec, center + rvec)
+            bbox: AABB::from_points(center - rvec, center + rvec),
         }
     }
 
@@ -139,7 +150,7 @@ impl Sphere {
             center,
             radius,
             material: Rc::clone(&mat),
-            bbox: AABB::from_boxes(&box1, &box2)
+            bbox: AABB::from_boxes(&box1, &box2),
         }
     }
 
@@ -149,6 +160,12 @@ impl Sphere {
 
     pub fn radius(&self) -> f64 {
         self.radius
+    }
+
+    pub fn get_uv(&self, point: &Vec3) -> (f64, f64) {
+        let theta = -point.y().acos();
+        let phi = libm::atan2(-point.z(), point.x()) + PI;
+        (phi / (2. * PI), theta / phi)
     }
 }
 
@@ -175,11 +192,16 @@ impl Hittable for Sphere {
             }
         }
 
+        let outward_normal = (ray.at(root) - current_center) / self.radius;
+        let (u, v) = self.get_uv(&outward_normal);
+
         return Some(HitRecord::new(
             ray.at(root),
             root,
             ray,
-            (ray.at(root) - current_center) / self.radius,
+            outward_normal,
+            u,
+            v,
             Rc::clone(&self.material),
         ));
     }
