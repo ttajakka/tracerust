@@ -56,14 +56,7 @@ pub struct Metal {
 
 impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Self {
-        let fuzz = if fuzz < 0. {
-            0.
-        } else if fuzz > 1. {
-            1.
-        } else {
-            fuzz
-        };
-        Self { albedo, fuzz }
+        Self { albedo, fuzz: fuzz.clamp(0., 1.) }
     }
 }
 

@@ -55,9 +55,9 @@ pub fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis_index: usize
     let b_axis_interval = b.bounding_box().axis_interval(axis_index);
 
     if a_axis_interval.min() < b_axis_interval.min() {
-        return Ordering::Less;
+        Ordering::Less
     } else {
-        return Ordering::Greater;
+        Ordering::Greater
     }
 }
 
@@ -66,14 +66,16 @@ pub struct HittableList {
     bbox: AABB,
 }
 
-impl HittableList {
-    pub fn new() -> Self {
+impl Default for HittableList {
+    fn default() -> Self {
         Self {
             objects: vec![],
             bbox: AABB::empty(),
         }
     }
+}
 
+impl HittableList {
     pub fn from_hittable(bvh: Rc<dyn Hittable>) -> Self {
         Self {
             objects: vec![Rc::clone(&bvh)],
@@ -136,7 +138,7 @@ impl Sphere {
         Self {
             center: center_ray,
             radius,
-            material: Rc::clone(&mat),
+            material: Rc::clone(mat),
             bbox: AABB::from_points(center - rvec, center + rvec),
         }
     }
@@ -195,7 +197,7 @@ impl Hittable for Sphere {
         let outward_normal = (ray.at(root) - current_center) / self.radius;
         let (u, v) = self.get_uv(&outward_normal);
 
-        return Some(HitRecord::new(
+        Some(HitRecord::new(
             ray.at(root),
             root,
             ray,
@@ -203,7 +205,7 @@ impl Hittable for Sphere {
             u,
             v,
             Rc::clone(&self.material),
-        ));
+        ))
     }
 
     fn bounding_box(&self) -> &AABB {

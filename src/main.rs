@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use tracerust::bvh::BVHNode;
-use tracerust::camera::Camera;
+use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
 use tracerust::material::{Dielectric, Lambertian, Material, Metal};
@@ -25,7 +25,7 @@ fn main() {
 }
 
 fn bouncing_spheres() -> (HittableList, Camera) {
-    let mut world = HittableList::new();
+    let mut world = HittableList::default();
 
     // let ground_material: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
     let checker = Rc::new(CheckerTexture::from_colors(
@@ -95,39 +95,39 @@ fn bouncing_spheres() -> (HittableList, Camera) {
     )));
 
     // Set up camera
-    let aspect_ratio = 16.0_f64 / 9.0_f64;
-    // let image_width = 800;
-    // let samples_per_pixel = 100;
-    // let max_depth = 50;
-    let image_width = 400;
-    let samples_per_pixel = 20;
-    let max_depth = 20;
+    let image_params = ImageParams {
+        aspect_ratio: 16. / 9.,
+        image_width: 400,
+        samples_per_pixel: 20,
+        max_depth: 20,
+    };
 
-    let vfov = 20.;
-    let lookfrom = Vec3(13., 2., 3.);
-    let lookat = Vec3(0., 0., 0.);
-    let vup = Vec3(0., 1., 0.);
-    let defocus_angle = 0.6;
-    let focus_distance = 10.0;
+    let camera_params = CameraParams {
+        vfov: 20.,
+        lookfrom: Vec3(13., 2., 3.),
+        lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.6,
+    };
 
     let camera = Camera::new(
-        aspect_ratio,
-        image_width,
-        samples_per_pixel,
-        max_depth,
-        vfov,
-        lookfrom,
-        lookat,
-        vup,
-        focus_distance,
-        defocus_angle,
+        // max_depth,
+        image_params,
+        // vfov,
+        // lookfrom,
+        // lookat,
+        // vup,
+        // focus_distance,
+        // defocus_angle,
+        camera_params,
     );
 
     (world, camera)
 }
 
 fn checkered_spheres() -> (HittableList, Camera) {
-    let mut world = HittableList::new();
+    let mut world = HittableList::default();
 
     let checker = Rc::new(CheckerTexture::from_colors(
         0.32,
@@ -148,29 +148,25 @@ fn checkered_spheres() -> (HittableList, Camera) {
     )));
 
     // Set up camera
-    let aspect_ratio = 16.0_f64 / 9.0_f64;
-    let image_width = 400;
-    let samples_per_pixel = 100;
-    let max_depth = 50;
+    let image_params = ImageParams {
+        aspect_ratio: 16.0_f64 / 9.0_f64,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+    };
 
-    let vfov = 20.;
-    let lookfrom = Vec3(13., 2., 3.);
-    let lookat = Vec3(0., 0., 0.);
-    let vup = Vec3(0., 1., 0.);
-    let defocus_angle = 0.;
-    let focus_distance = 10.0;
+    let camera_params = CameraParams {
+        vfov: 20.,
+        lookfrom: Vec3(13., 2., 3.),
+        lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
+    };
 
     let camera = Camera::new(
-        aspect_ratio,
-        image_width,
-        samples_per_pixel,
-        max_depth,
-        vfov,
-        lookfrom,
-        lookat,
-        vup,
-        focus_distance,
-        defocus_angle,
+        image_params,
+        camera_params,
     );
 
     (world, camera)

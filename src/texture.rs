@@ -52,11 +52,7 @@ impl Texture for CheckerTexture {
         let y_integer = (self.inv_scale * point.y()).floor() as i32;
         let z_integer = (self.inv_scale * point.z()).floor() as i32;
 
-        let is_even = if (x_integer + y_integer + z_integer) % 2 == 0 {
-            true
-        } else {
-            false
-        };
+        let is_even = (x_integer + y_integer + z_integer) % 2 == 0;
 
         if is_even {
             self.even.value(u, v, point)

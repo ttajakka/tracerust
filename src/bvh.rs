@@ -95,31 +95,25 @@ impl AABB {
     /// Returns the index of the longest axis of the bounding box.
     fn longest_axis(&self) -> usize {
         if self.x.size() > self.y.size() {
-            if self.x.size() > self.z.size() {
-                return 0;
-            } else {
-                return 2;
-            }
+            if self.x.size() > self.z.size() { 0 } else { 2 }
+        } else if self.y.size() > self.z.size() {
+            1
         } else {
-            if self.y.size() > self.z.size() {
-                return 1;
-            } else {
-                return 2;
-            }
+            2
         }
     }
 
     pub fn hit(&self, r: &Ray, ray_t: &Interval) -> bool {
         let ray_orig = r.origin();
-        let ray_orig = vec![ray_orig.0, ray_orig.1, ray_orig.2];
+        let ray_orig = [ray_orig.0, ray_orig.1, ray_orig.2];
         let ray_dir = r.dir();
-        let ray_dir = vec![ray_dir.0, ray_dir.1, ray_dir.2];
+        let ray_dir = [ray_dir.0, ray_dir.1, ray_dir.2];
 
         let mut min = ray_t.min();
         let mut max = ray_t.max();
         for axis in 0..3 {
             let ax = self.axis_interval(axis);
-            let adinv = 1. / ray_dir[axis as usize]; // this can be f64::INFINITY or f64::NEG_INFINITY
+            let adinv = 1. / ray_dir[axis]; // this can be f64::INFINITY or f64::NEG_INFINITY
 
             let t0 = (ax.min() - ray_orig[axis]) * adinv;
             let t1 = (ax.max() - ray_orig[axis]) * adinv;
@@ -158,8 +152,11 @@ pub struct BVHNode {
 impl BVHNode {
     pub fn new(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Rc<Self> {
         let mut bbox = AABB::empty();
-        for i in start..end {
-            bbox = AABB::from_boxes(&bbox, objects[i].bounding_box());
+        // for i in start..end {
+        //     bbox = AABB::from_boxes(&bbox, objects[i].bounding_box());
+        // }
+        for o in objects.iter().take(end).skip(start) {
+            bbox = AABB::from_boxes(&bbox, o.bounding_box())
         }
         let axis_index = bbox.longest_axis();
         let span = end - start;

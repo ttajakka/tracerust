@@ -8,6 +8,22 @@ use crate::{
 use rand;
 use std::io::BufWriter;
 
+pub struct ImageParams {
+    pub aspect_ratio: f64,
+    pub image_width: u32,
+    pub samples_per_pixel: u32,
+    pub max_depth: u32,
+}
+
+pub struct CameraParams {
+    pub vfov: f64,
+    pub lookfrom: Vec3,
+    pub lookat: Vec3,
+    pub vup: Vec3,
+    pub focus_distance: f64,
+    pub defocus_angle: f64, // degrees
+}
+
 pub struct Camera {
     pub aspect_ratio: f64,      // Ratio of image width over height
     pub image_width: u32,       // Rendered image width in pixel count
@@ -52,17 +68,11 @@ impl Camera {
     }
 
     pub fn new(
-        aspect_ratio: f64,
-        image_width: u32,
-        samples_per_pixel: u32,
-        max_depth: u32,
-        vfov: f64,
-        lookfrom: Vec3,
-        lookat: Vec3,
-        vup: Vec3,
-        focus_distance: f64,
-        defocus_angle: f64, // degrees
+        image_params: ImageParams,
+        camera_params: CameraParams
     ) -> Self {
+        let ImageParams { aspect_ratio, image_width, samples_per_pixel, max_depth  } = image_params;
+        let CameraParams { vfov, lookfrom, lookat, vup, focus_distance, defocus_angle } = camera_params;
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -120,16 +130,15 @@ impl Camera {
     }
 
     pub fn color_ray(ray: &Ray, depth: u32, world: &HittableList) -> Color {
-        if depth <= 0 {
+        if depth == 0 {
             return Color::new(0., 0., 0.);
         }
         match world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
             Some(rec) => match rec.mat.scatter(ray, &rec) {
                 Some(scatres) => {
-                    return scatres.attenuation
-                        * Camera::color_ray(&scatres.scattered, depth - 1, world);
+                    scatres.attenuation * Camera::color_ray(&scatres.scattered, depth - 1, world)
                 }
-                None => return Color::new(0., 0., 0.),
+                None => Color::new(0., 0., 0.),
             },
             None => {
                 let u = ray.dir().unit();

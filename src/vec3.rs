@@ -61,7 +61,8 @@ impl Vec3 {
         loop {
             let p = Self::random();
             let lensq = p.length_squared();
-            if 1e-160 <= lensq && lensq <= 1. {
+            // if 1e-160 <= lensq && lensq <= 1. {
+            if (1e-160..1.).contains(&lensq) {
                 return p / lensq.sqrt();
             }
         }
@@ -86,7 +87,7 @@ impl Vec3 {
 
     pub fn near_zero(&self) -> bool {
         const EPS: f64 = 1e-8;
-        return self.0.abs() < EPS && self.1.abs() < EPS && self.2.abs() < EPS;
+        self.0.abs() < EPS && self.1.abs() < EPS && self.2.abs() < EPS
     }
 
     // return the reflection of self across normal
@@ -98,7 +99,7 @@ impl Vec3 {
     // whose normal is n and etai_over_etat is the ratio of the refactive
     // indices. self and n should be a unit vectors.
     pub fn refract(&self, n: &Self, etai_over_etat: f64) -> Self {
-        let cos_theta = -self.dot(&n);
+        let cos_theta = -self.dot(n);
         let r_out_perp = etai_over_etat * (*self + cos_theta * *n);
         let r_out_parallel = -(1. - r_out_perp.length_squared()).abs().sqrt() * *n;
         r_out_perp + r_out_parallel

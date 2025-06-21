@@ -113,7 +113,7 @@ impl PPM {
         let w = self.width;
         let h = self.height;
         writer
-            .write(format!("P3\n{} {}\n255\n", w, h).as_bytes())
+            .write_all(format!("P3\n{} {}\n255\n", w, h).as_bytes())
             .unwrap();
 
         for j in 0..h {

@@ -12,7 +12,7 @@ pub struct Ray {
 impl Ray {
     pub fn new(origin: Vec3, dir: Vec3, time: f64) -> Self {
         Ray {
-            origin: origin,
+            origin,
             dir,
             tm: time
         }
@@ -31,7 +31,7 @@ impl Ray {
     }
 
     pub fn at(&self, t: f64) -> Vec3 {
-        self.origin.clone() + self.dir.clone() * t
+        self.origin + self.dir * t
     }
 }
 
