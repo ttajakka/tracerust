@@ -164,10 +164,10 @@ impl Sphere {
         self.radius
     }
 
-    pub fn get_uv(&self, point: &Vec3) -> (f64, f64) {
-        let theta = -point.y().acos();
-        let phi = libm::atan2(-point.z(), point.x()) + PI;
-        (phi / (2. * PI), theta / phi)
+    pub fn get_uv(&self, p: &Vec3) -> (f64, f64) {
+        let theta = (-p.y()).acos();
+        let phi = libm::atan2(-p.z(), p.x()) + PI;
+        (phi / (2. * PI), theta / PI)
     }
 }
 
@@ -210,5 +210,25 @@ impl Hittable for Sphere {
 
     fn bounding_box(&self) -> &AABB {
         &self.bbox
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::material::{Dielectric};
+
+    use super::*;
+
+    #[test]
+    fn get_uv_works() {
+        let mat: Rc<dyn Material> = Rc::new(Dielectric::new(1.0)); 
+        let sphere = Sphere::stationary(Vec3(0., 0., 0.), 1., &mat);
+        assert_eq!(sphere.get_uv(&Vec3(1., 0., 0.)), (0.5, 0.5));
+        assert_eq!(sphere.get_uv(&Vec3(0., 1., 0.)), (0.5, 1.0));
+        assert_eq!(sphere.get_uv(&Vec3(0., 0., 1.)), (0.25, 0.5));
+        assert_eq!(sphere.get_uv(&Vec3(-1., 0., 0.)), (0., 0.5));
+        assert_eq!(sphere.get_uv(&Vec3(0., -1., 0.)), (0.5, 0.));
+        assert_eq!(sphere.get_uv(&Vec3(0., 0., -1.)), (0.75, 0.5));
     }
 }

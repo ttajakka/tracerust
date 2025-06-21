@@ -173,7 +173,7 @@ fn checkered_spheres() -> (HittableList, Camera) {
 fn earth() -> (HittableList, Camera) {
     let mut world = HittableList::default();
 
-    let earth_texture = Rc::new(ImageTexture::from_file(""));
+    let earth_texture = Rc::new(ImageTexture::from_file("assets/earthmap.jpg"));
     let earth_surface: Rc<dyn Material> = Rc::new(Lambertian::from_texture(earth_texture));
     let globe = Sphere::stationary(Vec3(0., 0., 0.), 2., &earth_surface);
     world.add(Rc::new(globe));

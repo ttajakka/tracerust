@@ -1,4 +1,7 @@
+use core::panic;
 use std::rc::Rc;
+
+use image::{ImageReader, RgbImage};
 
 use crate::{color::Color, vec3::Vec3};
 
@@ -65,18 +68,26 @@ impl Texture for CheckerTexture {
 struct ImageTextureData {
     height: usize,
     width: usize,
+    data: RgbImage
 }
 
 impl ImageTextureData {
-    fn from_file(_: &str) -> Self {
-        Self {
-            height: 0,
-            width: 0,
+    fn from_file(filename: &str) -> Self {
+        if let image::DynamicImage::ImageRgb8(img) =
+            ImageReader::open(filename).unwrap().decode().unwrap()
+        {
+            return Self {
+                height: img.height() as usize,
+                width: img.width() as usize,
+                data: img
+            };
         }
+        panic!()
     }
 
-    pub fn pixel_data(&self, _: usize, _: usize) -> Color {
-        Vec3(255., 0., 255.)
+    pub fn pixel_data(&self, i: usize, j: usize) -> Color {
+        let pxl = self.data.get_pixel(i as u32, j as u32).0;
+        Vec3(pxl[0] as f64, pxl[1] as f64, pxl[2] as f64)
     }
 }
 
@@ -101,7 +112,7 @@ impl Texture for ImageTexture {
         let u = u.clamp(0., 1.);
         let v = 1. - v.clamp(0., 1.);
         let i = (u * self.image.width as f64) as usize;
-        let j = (v * self.image.height as f64) as usize;
+        let j = (v * self.image.height as f64) as usize - 1;
 
         1.0 / 255. * self.image.pixel_data(i, j)
     }
