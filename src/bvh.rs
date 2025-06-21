@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{fmt::Display, rc::Rc};
 
 use crate::{
     hittable::{self, HitRecord, Hittable},
@@ -12,11 +12,29 @@ use crate::{
 /// Representes a 3-dimensional parallelepiped
 /// bounded by three pairs of plains, each pair
 /// aligned with a coordinate plane and defined by an Interval.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct AABB {
     pub x: Interval,
     pub y: Interval,
     pub z: Interval,
+}
+
+impl Display for AABB {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let x = &self.x;
+        let y = &self.y;
+        let z = &self.z;
+        write!(
+            f,
+            "[{:.3}, {:.3}] x [{:.3}, {:.3}] x [{:.3}, {:.3}]",
+            x.min(),
+            x.max(),
+            y.min(),
+            y.max(),
+            z.min(),
+            z.max()
+        )
+    }
 }
 
 impl AABB {
@@ -74,6 +92,23 @@ impl AABB {
         }
     }
 
+    /// Returns the index of the longest axis of the bounding box.
+    fn longest_axis(&self) -> usize {
+        if self.x.size() > self.y.size() {
+            if self.x.size() > self.z.size() {
+                return 0;
+            } else {
+                return 2;
+            }
+        } else {
+            if self.y.size() > self.z.size() {
+                return 1;
+            } else {
+                return 2;
+            }
+        }
+    }
+
     pub fn hit(&self, r: &Ray, ray_t: &Interval) -> bool {
         let ray_orig = r.origin();
         let ray_orig = vec![ray_orig.0, ray_orig.1, ray_orig.2];
@@ -122,7 +157,11 @@ pub struct BVHNode {
 
 impl BVHNode {
     pub fn new(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Rc<Self> {
-        let axis_index: usize = rand::random_range(0..3);
+        let mut bbox = AABB::empty();
+        for i in start..end {
+            bbox = AABB::from_boxes(&bbox, objects[i].bounding_box());
+        }
+        let axis_index = bbox.longest_axis();
         let span = end - start;
 
         let left: Rc<dyn Hittable>;
@@ -135,14 +174,12 @@ impl BVHNode {
             left = Rc::clone(&objects[start]);
             right = Rc::clone(&objects[start + 1]);
         } else {
-            objects.sort_by(|a, b| hittable::box_compare(a, b, axis_index));
+            objects[start..end].sort_by(|a, b| hittable::box_compare(a, b, axis_index));
 
             let mid = start + span / 2;
             left = BVHNode::new(objects, start, mid);
             right = BVHNode::new(objects, mid, end);
         }
-
-        let bbox = AABB::from_boxes(left.bounding_box(), right.bounding_box());
 
         Rc::new(Self { left, right, bbox })
     }

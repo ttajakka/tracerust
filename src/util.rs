@@ -10,7 +10,7 @@ pub fn degrees_to_radians(degrees: f64) -> f64 {
     degrees * std::f64::consts::PI / 180.
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Interval {
     min: f64,
     max: f64,
