@@ -119,7 +119,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn stationary(center: Vec3, radius: f64, mat: Rc<dyn Material>) -> Self {
+    pub fn stationary(center: Vec3, radius: f64, mat: &Rc<dyn Material>) -> Self {
         let center_ray = Ray::new(center, Vec3(0., 0., 0.), 0.);
         let rvec = Vec3(radius, radius, radius);
         Self {
