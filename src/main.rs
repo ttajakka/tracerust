@@ -5,16 +5,17 @@ use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
 use tracerust::material::{Dielectric, Lambertian, Material, Metal};
-use tracerust::texture::CheckerTexture;
+use tracerust::texture::{CheckerTexture, ImageTexture};
 use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
     let mut world;
     let cam;
-    match 2 {
+    match 3 {
         1 => (world, cam) = bouncing_spheres(),
         2 => (world, cam) = checkered_spheres(),
+        3 => (world, cam) = earth(),
         _ => panic!(),
     }
 
@@ -164,10 +165,35 @@ fn checkered_spheres() -> (HittableList, Camera) {
         defocus_angle: 0.,
     };
 
-    let camera = Camera::new(
-        image_params,
-        camera_params,
-    );
+    let camera = Camera::new(image_params, camera_params);
 
+    (world, camera)
+}
+
+fn earth() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let earth_texture = Rc::new(ImageTexture::from_file(""));
+    let earth_surface: Rc<dyn Material> = Rc::new(Lambertian::from_texture(earth_texture));
+    let globe = Sphere::stationary(Vec3(0., 0., 0.), 2., &earth_surface);
+    world.add(Rc::new(globe));
+
+    let image_params = ImageParams {
+        aspect_ratio: 16. / 9.,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+    };
+
+    let camera_params = CameraParams {
+        vfov: 20.,
+        lookfrom: Vec3(0., 0., 12.),
+        lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
     (world, camera)
 }

@@ -61,3 +61,48 @@ impl Texture for CheckerTexture {
         }
     }
 }
+
+struct ImageTextureData {
+    height: usize,
+    width: usize,
+}
+
+impl ImageTextureData {
+    fn from_file(_: &str) -> Self {
+        Self {
+            height: 0,
+            width: 0,
+        }
+    }
+
+    pub fn pixel_data(&self, _: usize, _: usize) -> Color {
+        Vec3(255., 0., 255.)
+    }
+}
+
+pub struct ImageTexture {
+    image: ImageTextureData,
+}
+
+impl ImageTexture {
+    pub fn from_file(filename: &str) -> Self {
+        Self {
+            image: ImageTextureData::from_file(filename),
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _: Vec3) -> Color {
+        if self.image.height == 0 {
+            return Vec3(0., 1., 1.);
+        }
+
+        let u = u.clamp(0., 1.);
+        let v = 1. - v.clamp(0., 1.);
+        let i = (u * self.image.width as f64) as usize;
+        let j = (v * self.image.height as f64) as usize;
+
+        1.0 / 255. * self.image.pixel_data(i, j)
+    }
+}
