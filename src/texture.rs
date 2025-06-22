@@ -128,6 +128,20 @@ impl Perlin {
 
         perlin_interp(c, u, v, w)
     }
+
+    fn turb(&self, p: &Vec3, depth: u32) -> f64 {
+        let mut accum = 0.;
+        let mut temp_p = *p;
+        let mut weight = 1.;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.;
+        };
+
+        accum.abs()
+    }
 }
 
 fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
@@ -171,7 +185,7 @@ impl Default for Perlin {
 
 pub struct NoiseTexture {
     noise: Perlin,
-    scale: f64,
+    pub scale: f64,
 }
 
 impl NoiseTexture {
@@ -196,6 +210,6 @@ const WHITE: Color = Vec3(1., 1., 1.);
 
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, point: Vec3) -> Color {
-        WHITE * 0.5 * (1. + self.noise.noise(&(self.scale * point)))
+        WHITE * self.noise.turb(&point, 7)
     }
 }
