@@ -1,5 +1,5 @@
 use std::rc::Rc;
-
+use rand::seq::SliceRandom;
 use crate::{color::Color, image_util::ImageTextureData, vec3::Vec3};
 
 pub trait Texture {
@@ -98,23 +98,11 @@ struct Perlin {
     perm_z: [usize; POINT_COUNT],
 }
 
-fn permute(p: &mut [usize; POINT_COUNT], n: usize) {
-    for i in (0..n - 1).rev() {
-        let target = rand::random_range(0..n);
-        let tmp = p[i];
-        p[i] = p[target];
-        p[target] = tmp;
-    }
-}
-
 impl Perlin {
     fn generate_perm() -> [usize; POINT_COUNT] {
-        let mut p = [0; POINT_COUNT];
-        for i in 0..POINT_COUNT {
-            p[i] = i;
-        }
-        permute(&mut p, POINT_COUNT);
-        p
+        let mut p = core::array::from_fn::<_, POINT_COUNT, _>(|i| i).to_vec();
+        p.shuffle(&mut rand::rng());
+        p.try_into().unwrap()
     }
 
     fn noise(&self, p: &Vec3) -> f64 {
@@ -130,13 +118,10 @@ impl Perlin {
 
 impl Default for Perlin {
     fn default() -> Self {
-        let mut randfloat = [0.; POINT_COUNT];
         let perm_x = Self::generate_perm();
         let perm_y = Self::generate_perm();
         let perm_z = Self::generate_perm();
-        for i in 0..POINT_COUNT {
-            randfloat[i] = rand::random();
-        }
+        let randfloat = core::array::from_fn(|_| rand::random::<f64>());
 
         Self {
             randfloat,
@@ -147,16 +132,9 @@ impl Default for Perlin {
     }
 }
 
+#[derive(Default)]
 pub struct NoiseTexture {
     noise: Perlin,
-}
-
-impl Default for NoiseTexture {
-    fn default() -> Self {
-        Self {
-            noise: Perlin::default(),
-        }
-    }
 }
 
 const WHITE: Color = Vec3(1., 1., 1.);
