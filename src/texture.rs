@@ -1,6 +1,6 @@
-use std::rc::Rc;
-use rand::seq::SliceRandom;
 use crate::{color::Color, image_util::ImageTextureData, vec3::Vec3};
+use rand::seq::SliceRandom;
+use std::rc::Rc;
 
 pub trait Texture {
     fn value(&self, u: f64, v: f64, point: Vec3) -> Color;
@@ -106,14 +106,49 @@ impl Perlin {
     }
 
     fn noise(&self, p: &Vec3) -> f64 {
-        let i = ((4. * p.x()) as i32).rem_euclid(255) as usize;
-        let j = ((4. * p.y()) as i32).rem_euclid(255) as usize;
-        let k = ((4. * p.z()) as i32).rem_euclid(255) as usize;
+        let u = p.x() - p.x().floor();
+        let v = p.y() - p.y().floor();
+        let w = p.z() - p.z().floor();
+        let u = u*u*(3. - 2.*u);
+        let v = v*v*(3. - 2.*v);
+        let w = w*w*(3. - 2.*w);
 
-        let choice = self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k];
+        let i = p.x().floor() as i32;
+        let j = p.y().floor() as i32;
+        let k = p.z().floor() as i32;
 
-        self.randfloat[choice]
+        let mut c = [[[0.; 2]; 2]; 2];
+        for (di, c_i) in c.iter_mut().enumerate() {
+            for (dj, c_ij) in c_i.iter_mut().enumerate() {
+                for (dk, c_ijk) in c_ij.iter_mut().enumerate() {
+                    *c_ijk = self.randfloat[self.perm_x
+                        [(i + di as i32).rem_euclid(POINT_COUNT as i32) as usize]
+                        ^ self.perm_y[(j + dj as i32).rem_euclid(POINT_COUNT as i32) as usize]
+                        ^ self.perm_z[(k + dk as i32).rem_euclid(POINT_COUNT as i32) as usize]];
+                }
+            }
+        }
+
+        trilinear_interp(c, u, v, w)
     }
+}
+
+fn trilinear_interp(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    let mut accum = 0.;
+    for (i, ci) in c.iter().enumerate() {
+        for (j, cj) in ci.iter().enumerate() {
+            for (k, ck) in cj.iter().enumerate() {
+                let i = i as f64;
+                let j = j as f64;
+                let k = k as f64;
+                accum += (i * u + (1. - i) * (1. - u))
+                    * (j * v + (1. - j) * (1. - v))
+                    * (k * w + (1. - k) * (1. - w))
+                    * ck;
+            }
+        }
+    }
+    accum
 }
 
 impl Default for Perlin {
