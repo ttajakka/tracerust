@@ -92,7 +92,7 @@ impl Texture for ImageTexture {
 const POINT_COUNT: usize = 256;
 
 struct Perlin {
-    randfloat: [f64; POINT_COUNT],
+    randvec: [Vec3; POINT_COUNT],
     perm_x: [usize; POINT_COUNT],
     perm_y: [usize; POINT_COUNT],
     perm_z: [usize; POINT_COUNT],
@@ -109,19 +109,16 @@ impl Perlin {
         let u = p.x() - p.x().floor();
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
-        let u = u * u * (3. - 2. * u);
-        let v = v * v * (3. - 2. * v);
-        let w = w * w * (3. - 2. * w);
 
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
 
-        let mut c = [[[0.; 2]; 2]; 2];
+        let mut c = [[[Vec3(0., 0., 0.); 2]; 2]; 2];
         for (di, c_i) in c.iter_mut().enumerate() {
             for (dj, c_ij) in c_i.iter_mut().enumerate() {
                 for (dk, c_ijk) in c_ij.iter_mut().enumerate() {
-                    *c_ijk = self.randfloat[self.perm_x
+                    *c_ijk = self.randvec[self.perm_x
                         [(i + di as i32).rem_euclid(POINT_COUNT as i32) as usize]
                         ^ self.perm_y[(j + dj as i32).rem_euclid(POINT_COUNT as i32) as usize]
                         ^ self.perm_z[(k + dk as i32).rem_euclid(POINT_COUNT as i32) as usize]];
@@ -129,22 +126,27 @@ impl Perlin {
             }
         }
 
-        trilinear_interp(c, u, v, w)
+        perlin_interp(c, u, v, w)
     }
 }
 
-fn trilinear_interp(c: [[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+fn perlin_interp(c: [[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    let uu = u * u * (3. - 2. * u);
+    let vv = v * v * (3. - 2. * v);
+    let ww = w * w * (3. - 2. * w);
+
     let mut accum = 0.;
     for (i, ci) in c.iter().enumerate() {
         for (j, cj) in ci.iter().enumerate() {
             for (k, ck) in cj.iter().enumerate() {
+                let weight_v = Vec3(u - i as f64, v - j as f64, w - k as f64);
                 let i = i as f64;
                 let j = j as f64;
                 let k = k as f64;
-                accum += (i * u + (1. - i) * (1. - u))
-                    * (j * v + (1. - j) * (1. - v))
-                    * (k * w + (1. - k) * (1. - w))
-                    * ck;
+                accum += (i * uu + (1. - i) * (1. - uu))
+                    * (j * vv + (1. - j) * (1. - vv))
+                    * (k * ww + (1. - k) * (1. - ww))
+                    * ck.dot(&weight_v);
             }
         }
     }
@@ -156,10 +158,10 @@ impl Default for Perlin {
         let perm_x = Self::generate_perm();
         let perm_y = Self::generate_perm();
         let perm_z = Self::generate_perm();
-        let randfloat = core::array::from_fn(|_| rand::random::<f64>());
+        let randvec = core::array::from_fn(|_| Vec3::random_mm(-1., 1.));
 
         Self {
-            randfloat,
+            randvec,
             perm_x,
             perm_y,
             perm_z,
@@ -176,7 +178,7 @@ impl NoiseTexture {
     pub fn new(scale: f64) -> Self {
         Self {
             noise: Perlin::default(),
-            scale
+            scale,
         }
     }
 }
@@ -185,7 +187,7 @@ impl Default for NoiseTexture {
     fn default() -> Self {
         Self {
             noise: Perlin::default(),
-            scale: 1.
+            scale: 1.,
         }
     }
 }
@@ -194,6 +196,6 @@ const WHITE: Color = Vec3(1., 1., 1.);
 
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, point: Vec3) -> Color {
-        WHITE * self.noise.noise(&(self.scale * point))
+        WHITE * 0.5 * (1. + self.noise.noise(&(self.scale * point)))
     }
 }
