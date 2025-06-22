@@ -210,6 +210,6 @@ const WHITE: Color = Vec3(1., 1., 1.);
 
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, point: Vec3) -> Color {
-        WHITE * self.noise.turb(&point, 7)
+        WHITE * 0.5 * (1. + (self.scale * point.z() + 10. * self.noise.turb(&point, 7)).sin())
     }
 }
