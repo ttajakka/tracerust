@@ -5,17 +5,18 @@ use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
 use tracerust::material::{Dielectric, Lambertian, Material, Metal};
-use tracerust::texture::{CheckerTexture, ImageTexture};
+use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
     let mut world;
     let cam;
-    match 3 {
+    match 4 {
         1 => (world, cam) = bouncing_spheres(),
         2 => (world, cam) = checkered_spheres(),
         3 => (world, cam) = earth(),
+        4 => (world, cam) = perlin_sphere(),
         _ => panic!(),
     }
 
@@ -112,17 +113,7 @@ fn bouncing_spheres() -> (HittableList, Camera) {
         defocus_angle: 0.6,
     };
 
-    let camera = Camera::new(
-        // max_depth,
-        image_params,
-        // vfov,
-        // lookfrom,
-        // lookat,
-        // vup,
-        // focus_distance,
-        // defocus_angle,
-        camera_params,
-    );
+    let camera = Camera::new(image_params, camera_params);
 
     (world, camera)
 }
@@ -195,5 +186,41 @@ fn earth() -> (HittableList, Camera) {
     };
 
     let camera = Camera::new(image_params, camera_params);
+    (world, camera)
+}
+
+fn perlin_sphere() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let noise_tex = Rc::new(NoiseTexture::default());
+    let noise_mat: Rc<dyn Material> = Rc::new(Lambertian::from_texture(noise_tex));
+    let globe = Sphere::stationary(Vec3(0., 2., 0.), 2., &noise_mat);
+    world.add(Rc::new(globe));
+    world.add(Rc::new(Sphere::stationary(
+        Vec3(0., -1000., 0.),
+        1000.,
+        &noise_mat,
+    )));
+
+
+    // Set up camera
+    let image_params = ImageParams {
+        aspect_ratio: 16. / 9.,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+    };
+
+    let camera_params = CameraParams {
+        vfov: 20.,
+        lookfrom: Vec3(13., 2., 3.),
+        lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.6,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
+
     (world, camera)
 }

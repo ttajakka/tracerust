@@ -1,9 +1,6 @@
-use core::panic;
 use std::rc::Rc;
 
-use image::{ImageReader, RgbImage};
-
-use crate::{color::Color, vec3::Vec3};
+use crate::{color::Color, image_util::ImageTextureData, vec3::Vec3};
 
 pub trait Texture {
     fn value(&self, u: f64, v: f64, point: Vec3) -> Color;
@@ -65,32 +62,6 @@ impl Texture for CheckerTexture {
     }
 }
 
-struct ImageTextureData {
-    height: usize,
-    width: usize,
-    data: RgbImage
-}
-
-impl ImageTextureData {
-    fn from_file(filename: &str) -> Self {
-        if let image::DynamicImage::ImageRgb8(img) =
-            ImageReader::open(filename).unwrap().decode().unwrap()
-        {
-            return Self {
-                height: img.height() as usize,
-                width: img.width() as usize,
-                data: img
-            };
-        }
-        panic!()
-    }
-
-    pub fn pixel_data(&self, i: usize, j: usize) -> Color {
-        let pxl = self.data.get_pixel(i as u32, j as u32).0;
-        Vec3(pxl[0] as f64, pxl[1] as f64, pxl[2] as f64)
-    }
-}
-
 pub struct ImageTexture {
     image: ImageTextureData,
 }
@@ -115,5 +86,83 @@ impl Texture for ImageTexture {
         let j = (v * self.image.height as f64) as usize - 1;
 
         1.0 / 255. * self.image.pixel_data(i, j)
+    }
+}
+
+const POINT_COUNT: usize = 256;
+
+struct Perlin {
+    randfloat: [f64; POINT_COUNT],
+    perm_x: [usize; POINT_COUNT],
+    perm_y: [usize; POINT_COUNT],
+    perm_z: [usize; POINT_COUNT],
+}
+
+fn permute(p: &mut [usize; POINT_COUNT], n: usize) {
+    for i in (0..n - 1).rev() {
+        let target = rand::random_range(0..n);
+        let tmp = p[i];
+        p[i] = p[target];
+        p[target] = tmp;
+    }
+}
+
+impl Perlin {
+    fn generate_perm() -> [usize; POINT_COUNT] {
+        let mut p = [0; POINT_COUNT];
+        for i in 0..POINT_COUNT {
+            p[i] = i;
+        }
+        permute(&mut p, POINT_COUNT);
+        p
+    }
+
+    fn noise(&self, p: &Vec3) -> f64 {
+        let i = ((4. * p.x()) as i32).rem_euclid(255) as usize;
+        let j = ((4. * p.y()) as i32).rem_euclid(255) as usize;
+        let k = ((4. * p.z()) as i32).rem_euclid(255) as usize;
+
+        let choice = self.perm_x[i] ^ self.perm_y[j] ^ self.perm_z[k];
+
+        self.randfloat[choice]
+    }
+}
+
+impl Default for Perlin {
+    fn default() -> Self {
+        let mut randfloat = [0.; POINT_COUNT];
+        let perm_x = Self::generate_perm();
+        let perm_y = Self::generate_perm();
+        let perm_z = Self::generate_perm();
+        for i in 0..POINT_COUNT {
+            randfloat[i] = rand::random();
+        }
+
+        Self {
+            randfloat,
+            perm_x,
+            perm_y,
+            perm_z,
+        }
+    }
+}
+
+pub struct NoiseTexture {
+    noise: Perlin,
+}
+
+impl Default for NoiseTexture {
+    fn default() -> Self {
+        Self {
+            noise: Perlin::default(),
+        }
+    }
+}
+
+const WHITE: Color = Vec3(1., 1., 1.);
+
+impl Texture for NoiseTexture {
+    fn value(&self, _: f64, _: f64, point: Vec3) -> Color {
+        WHITE * self.noise.noise(&point)
     }
 }

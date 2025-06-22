@@ -2,6 +2,7 @@ pub mod bvh;
 pub mod camera;
 pub mod color;
 pub mod hittable;
+pub mod image_util;
 pub mod material;
 pub mod ray;
 pub mod texture;
