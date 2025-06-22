@@ -109,9 +109,9 @@ impl Perlin {
         let u = p.x() - p.x().floor();
         let v = p.y() - p.y().floor();
         let w = p.z() - p.z().floor();
-        let u = u*u*(3. - 2.*u);
-        let v = v*v*(3. - 2.*v);
-        let w = w*w*(3. - 2.*w);
+        let u = u * u * (3. - 2. * u);
+        let v = v * v * (3. - 2. * v);
+        let w = w * w * (3. - 2. * w);
 
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
@@ -167,15 +167,33 @@ impl Default for Perlin {
     }
 }
 
-#[derive(Default)]
 pub struct NoiseTexture {
     noise: Perlin,
+    scale: f64,
+}
+
+impl NoiseTexture {
+    pub fn new(scale: f64) -> Self {
+        Self {
+            noise: Perlin::default(),
+            scale
+        }
+    }
+}
+
+impl Default for NoiseTexture {
+    fn default() -> Self {
+        Self {
+            noise: Perlin::default(),
+            scale: 1.
+        }
+    }
 }
 
 const WHITE: Color = Vec3(1., 1., 1.);
 
 impl Texture for NoiseTexture {
     fn value(&self, _: f64, _: f64, point: Vec3) -> Color {
-        WHITE * self.noise.noise(&point)
+        WHITE * self.noise.noise(&(self.scale * point))
     }
 }

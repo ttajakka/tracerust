@@ -192,7 +192,7 @@ fn earth() -> (HittableList, Camera) {
 fn perlin_sphere() -> (HittableList, Camera) {
     let mut world = HittableList::default();
 
-    let noise_tex = Rc::new(NoiseTexture::default());
+    let noise_tex = Rc::new(NoiseTexture::new(4.));
     let noise_mat: Rc<dyn Material> = Rc::new(Lambertian::from_texture(noise_tex));
     let globe = Sphere::stationary(Vec3(0., 2., 0.), 2., &noise_mat);
     world.add(Rc::new(globe));
