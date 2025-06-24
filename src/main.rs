@@ -5,20 +5,20 @@ use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
 use tracerust::material::{Dielectric, Lambertian, Material, Metal};
+use tracerust::quad::Quad;
 use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let mut world;
-    let cam;
-    match 4 {
-        1 => (world, cam) = bouncing_spheres(),
-        2 => (world, cam) = checkered_spheres(),
-        3 => (world, cam) = earth(),
-        4 => (world, cam) = perlin_sphere(),
+    let (mut world, cam) = match 5 {
+        1 => bouncing_spheres(),
+        2 => checkered_spheres(),
+        3 => earth(),
+        4 => perlin_sphere(),
+        5 => quads(),
         _ => panic!(),
-    }
+    };
 
     let count = world.count();
     let world = HittableList::from_hittable(BVHNode::new(&mut world.objects, 0, count));
@@ -202,7 +202,6 @@ fn perlin_sphere() -> (HittableList, Camera) {
         &noise_mat,
     )));
 
-
     // Set up camera
     let image_params = ImageParams {
         aspect_ratio: 16. / 9.,
@@ -218,6 +217,68 @@ fn perlin_sphere() -> (HittableList, Camera) {
         vup: Vec3(0., 1., 0.),
         focus_distance: 10.,
         defocus_angle: 0.6,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
+
+    (world, camera)
+}
+
+fn quads() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let left_red: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(1., 0.2, 0.2)));
+    let back_green: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.2, 1., 0.2)));
+    let right_blue: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.2, 0.2, 1.)));
+    let upper_orange: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(1., 0.5, 0.0)));
+    let lower_teal: Rc<dyn Material> = Rc::new(Lambertian::new(Color::new(0.2, 0.8, 0.8)));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(-3., -2., 5.),
+        Vec3(0., 0., -4.),
+        Vec3(0., 4., 0.),
+        left_red,
+    )));
+    world.add(Rc::new(Quad::new(
+        Vec3(-2., -2., 0.),
+        Vec3(4., 0., 0.),
+        Vec3(0., 4., 0.),
+        back_green,
+    )));
+    world.add(Rc::new(Quad::new(
+        Vec3(3., -2., 1.),
+        Vec3(0., 0., 4.),
+        Vec3(0., 4., 0.),
+        right_blue,
+    )));
+    world.add(Rc::new(Quad::new(
+        Vec3(-2., 3., 1.),
+        Vec3(4., 0., 0.),
+        Vec3(0., 0., 4.),
+        upper_orange,
+    )));
+    world.add(Rc::new(Quad::new(
+        Vec3(-2., -3., 5.),
+        Vec3(4., 0., 0.),
+        Vec3(0., 0., -4.),
+        lower_teal,
+    )));
+
+    // Set up camera
+    let image_params = ImageParams {
+        aspect_ratio: 1.,
+        image_width: 1200,
+        samples_per_pixel: 100,
+        max_depth: 50,
+    };
+
+    let camera_params = CameraParams {
+        vfov: 80.,
+        lookfrom: Vec3(0., 0., 9.),
+        lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
     };
 
     let camera = Camera::new(image_params, camera_params);

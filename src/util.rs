@@ -89,6 +89,9 @@ pub const UNIVERSE: Interval = Interval {
     min: f64::NEG_INFINITY,
     max: f64::INFINITY,
 };
+pub const UNIT: Interval = Interval {
+    min: 0., max: 1.
+};
 
 pub struct PPM {
     width: u32,

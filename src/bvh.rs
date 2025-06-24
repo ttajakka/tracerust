@@ -50,6 +50,7 @@ impl AABB {
     /// Consumes three Intervals and returns a new AABB defined by
     /// those intervals.
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
+        let (x, y, z) = pad_to_minimums(x, y, z);
         Self { x, y, z }
     }
 
@@ -72,6 +73,7 @@ impl AABB {
         } else {
             Interval::new(b.2, a.2)
         };
+        let (x, y, z) = pad_to_minimums(x, y, z);
         Self { x, y, z }
     }
 
@@ -140,6 +142,16 @@ impl AABB {
         }
         true
     }
+}
+
+const DELTA: f64 = 0.0001;
+
+fn pad_to_minimums(x: Interval, y: Interval, z: Interval) -> (Interval, Interval, Interval) {
+    let x = if x.size() < DELTA { x.expand(DELTA) } else { x };
+    let y = if y.size() < DELTA { y.expand(DELTA) } else { y };
+    let z = if z.size() < DELTA { z.expand(DELTA) } else { z };
+
+    (x, y, z)
 }
 
 /// Bounding Volume Hierarcy node
