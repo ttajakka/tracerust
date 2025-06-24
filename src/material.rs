@@ -14,7 +14,12 @@ pub struct ScatterResult {
 }
 
 pub trait Material {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterResult>;
+    fn emitted(&self, _u: f64, _v: f64, _p: Vec3) -> Color {
+        Vec3(0., 0., 0.)
+    }
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<ScatterResult> {
+        None
+    }
 }
 
 pub struct Lambertian {
@@ -56,7 +61,10 @@ pub struct Metal {
 
 impl Metal {
     pub fn new(albedo: Color, fuzz: f64) -> Self {
-        Self { albedo, fuzz: fuzz.clamp(0., 1.) }
+        Self {
+            albedo,
+            fuzz: fuzz.clamp(0., 1.),
+        }
     }
 }
 
@@ -114,5 +122,29 @@ impl Material for Dielectric {
             scattered: Ray::new(rec.point, dir, r_in.time()),
             attenuation: Color::new(1., 1., 1.),
         })
+    }
+}
+
+pub struct DiffuseLight {
+    tex: Rc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(tex: &Rc<dyn Texture>) -> Self {
+        Self {
+            tex: Rc::clone(tex)
+        }
+    }
+
+    pub fn from_color(emit: Color) -> Self {
+        Self {
+            tex: Rc::new(SolidColor::new(emit)),
+        }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn emitted(&self, u: f64, v: f64, p: Vec3) -> Color {
+        self.tex.value(u, v, p)
     }
 }

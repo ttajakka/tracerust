@@ -102,6 +102,7 @@ fn bouncing_spheres() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 20,
         max_depth: 20,
+        background: Color::new(0.7, 0.8, 1.0)
     };
 
     let camera_params = CameraParams {
@@ -145,6 +146,7 @@ fn checkered_spheres() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
+        background: Color::new(0.7, 0.8, 1.0)
     };
 
     let camera_params = CameraParams {
@@ -174,6 +176,7 @@ fn earth() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
+        background: Color::new(0.7, 0.8, 1.0)
     };
 
     let camera_params = CameraParams {
@@ -208,6 +211,7 @@ fn perlin_sphere() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
+        background: Color::new(0.7, 0.8, 1.0)
     };
 
     let camera_params = CameraParams {
@@ -267,9 +271,10 @@ fn quads() -> (HittableList, Camera) {
     // Set up camera
     let image_params = ImageParams {
         aspect_ratio: 1.,
-        image_width: 1200,
+        image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
+        background: Color::new(0.7, 0.8, 1.0)
     };
 
     let camera_params = CameraParams {

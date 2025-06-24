@@ -13,6 +13,7 @@ pub struct ImageParams {
     pub image_width: u32,
     pub samples_per_pixel: u32,
     pub max_depth: u32,
+    pub background: Color,
 }
 
 pub struct CameraParams {
@@ -29,6 +30,7 @@ pub struct Camera {
     pub image_width: u32,       // Rendered image width in pixel count
     pub samples_per_pixel: u32, // Count of random samples for each pixel
     pub max_depth: u32,         // Maximum number of ray bounces into scene
+    pub background: Color,      // Scene background color
     pub vfov: f64,              // vertical field of view in degrees
     pub lookfrom: Vec3,         // Point camera is looking from
     pub lookat: Vec3,           // Point camera is looking at
@@ -56,7 +58,7 @@ impl Camera {
                 let mut pixel_color = Color::new(0., 0., 0.);
                 for _ in 0..self.samples_per_pixel {
                     let r = self.get_ray(i, j);
-                    pixel_color += Self::color_ray(&r, self.max_depth, &world)
+                    pixel_color += self.color_ray(&r, self.max_depth, &world)
                 }
 
                 ppm.push(self.pixel_samples_scale * pixel_color);
@@ -67,12 +69,22 @@ impl Camera {
         ppm.write_to_buffer(&mut BufWriter::new(std::io::stdout()));
     }
 
-    pub fn new(
-        image_params: ImageParams,
-        camera_params: CameraParams
-    ) -> Self {
-        let ImageParams { aspect_ratio, image_width, samples_per_pixel, max_depth  } = image_params;
-        let CameraParams { vfov, lookfrom, lookat, vup, focus_distance, defocus_angle } = camera_params;
+    pub fn new(image_params: ImageParams, camera_params: CameraParams) -> Self {
+        let ImageParams {
+            aspect_ratio,
+            image_width,
+            samples_per_pixel,
+            max_depth,
+            background,
+        } = image_params;
+        let CameraParams {
+            vfov,
+            lookfrom,
+            lookat,
+            vup,
+            focus_distance,
+            defocus_angle,
+        } = camera_params;
         // Calculate the image height, and ensure that it's at least 1.
         let image_height = (image_width as f64 / aspect_ratio) as u32;
         let image_height = if image_height < 1 { 1 } else { image_height };
@@ -113,6 +125,7 @@ impl Camera {
             image_width,
             samples_per_pixel,
             max_depth,
+            background,
             vfov,
             image_height,
             center,
@@ -129,21 +142,26 @@ impl Camera {
         }
     }
 
-    pub fn color_ray(ray: &Ray, depth: u32, world: &HittableList) -> Color {
+    pub fn color_ray(&self, ray: &Ray, depth: u32, world: &HittableList) -> Color {
         if depth == 0 {
             return Color::new(0., 0., 0.);
         }
         match world.hit(ray, &Interval::new(0.001, f64::INFINITY)) {
-            Some(rec) => match rec.mat.scatter(ray, &rec) {
-                Some(scatres) => {
-                    scatres.attenuation * Camera::color_ray(&scatres.scattered, depth - 1, world)
-                }
-                None => Color::new(0., 0., 0.),
-            },
+            Some(rec) => {
+                let color_from_emission = rec.mat.emitted(rec.u, rec.v, rec.point);
+                let color_from_scatter = match rec.mat.scatter(ray, &rec) {
+                    Some(scatres) => {
+                        scatres.attenuation * self.color_ray(&scatres.scattered, depth - 1, world)
+                    }
+                    None => Color::new(0., 0., 0.),
+                };
+                color_from_emission + color_from_scatter
+            }
             None => {
-                let u = ray.dir().unit();
-                let a = 0.5 * (u.y() + 1.0);
-                (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+                // let u = ray.dir().unit();
+                // let a = 0.5 * (u.y() + 1.0);
+                // (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
+                self.background
             }
         }
     }
