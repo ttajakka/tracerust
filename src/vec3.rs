@@ -42,11 +42,7 @@ impl Vec3 {
     }
 
     pub fn random() -> Self {
-        Vec3(
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-        )
+        Self::random_mm(-1., 1.)
     }
 
     pub fn random_mm(min: f64, max: f64) -> Vec3 {

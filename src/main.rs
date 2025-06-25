@@ -4,19 +4,20 @@ use tracerust::bvh::BVHNode;
 use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
 use tracerust::hittable::{HittableList, Sphere};
-use tracerust::material::{Dielectric, Lambertian, Material, Metal};
+use tracerust::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use tracerust::quad::Quad;
 use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let (mut world, cam) = match 5 {
+    let (mut world, cam) = match 6 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_sphere(),
         5 => quads(),
+        6 => simple_light(),
         _ => panic!(),
     };
 
@@ -102,7 +103,7 @@ fn bouncing_spheres() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 20,
         max_depth: 20,
-        background: Color::new(0.7, 0.8, 1.0)
+        background: Color::new(0.7, 0.8, 1.0),
     };
 
     let camera_params = CameraParams {
@@ -146,7 +147,7 @@ fn checkered_spheres() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
-        background: Color::new(0.7, 0.8, 1.0)
+        background: Color::new(0.7, 0.8, 1.0),
     };
 
     let camera_params = CameraParams {
@@ -176,7 +177,7 @@ fn earth() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
-        background: Color::new(0.7, 0.8, 1.0)
+        background: Color::new(0.7, 0.8, 1.0),
     };
 
     let camera_params = CameraParams {
@@ -211,7 +212,7 @@ fn perlin_sphere() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
-        background: Color::new(0.7, 0.8, 1.0)
+        background: Color::new(0.7, 0.8, 1.0),
     };
 
     let camera_params = CameraParams {
@@ -274,13 +275,63 @@ fn quads() -> (HittableList, Camera) {
         image_width: 400,
         samples_per_pixel: 100,
         max_depth: 50,
-        background: Color::new(0.7, 0.8, 1.0)
+        background: Color::new(0.7, 0.8, 1.0),
     };
 
     let camera_params = CameraParams {
         vfov: 80.,
         lookfrom: Vec3(0., 0., 9.),
         lookat: Vec3(0., 0., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
+
+    (world, camera)
+}
+
+fn simple_light() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let noise_tex = Rc::new(NoiseTexture::new(4.));
+    let noise_mat: Rc<dyn Material> = Rc::new(Lambertian::from_texture(noise_tex));
+    world.add(Rc::new(Sphere::stationary(
+        Vec3(0., -1000., 0.),
+        1000.,
+        &noise_mat,
+    )));
+    world.add(Rc::new(Sphere::stationary(
+        Vec3(0., 2., 0.),
+        2.,
+        &noise_mat,
+    )));
+
+    let difflight: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Color::new(4., 4., 4.)));
+    world.add(Rc::new(Sphere::stationary(
+        Vec3(0., 7., 0.), 2., &difflight
+    )));
+    world.add(Rc::new(Quad::new(
+        Vec3(3., 1., -2.),
+        Vec3(2., 0., 0.),
+        Vec3(0., 2., 0.),
+        difflight,
+    )));
+
+    // Set up camera
+    let image_params = ImageParams {
+        aspect_ratio: 16. / 9.,
+        image_width: 400,
+        samples_per_pixel: 100,
+        max_depth: 50,
+        background: Color::new(0., 0., 0.),
+    };
+
+    let camera_params = CameraParams {
+        vfov: 20.,
+        lookfrom: Vec3(26., 3., 6.),
+        lookat: Vec3(0., 2., 0.),
         vup: Vec3(0., 1., 0.),
         focus_distance: 10.,
         defocus_angle: 0.,
