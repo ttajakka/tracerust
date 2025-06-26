@@ -11,13 +11,14 @@ use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let (mut world, cam) = match 6 {
+    let (mut world, cam) = match 7 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
         4 => perlin_sphere(),
         5 => quads(),
         6 => simple_light(),
+        7 => cornell_box(),
         _ => panic!(),
     };
 
@@ -242,31 +243,31 @@ fn quads() -> (HittableList, Camera) {
         Vec3(-3., -2., 5.),
         Vec3(0., 0., -4.),
         Vec3(0., 4., 0.),
-        left_red,
+        &left_red,
     )));
     world.add(Rc::new(Quad::new(
         Vec3(-2., -2., 0.),
         Vec3(4., 0., 0.),
         Vec3(0., 4., 0.),
-        back_green,
+        &back_green,
     )));
     world.add(Rc::new(Quad::new(
         Vec3(3., -2., 1.),
         Vec3(0., 0., 4.),
         Vec3(0., 4., 0.),
-        right_blue,
+        &right_blue,
     )));
     world.add(Rc::new(Quad::new(
         Vec3(-2., 3., 1.),
         Vec3(4., 0., 0.),
         Vec3(0., 0., 4.),
-        upper_orange,
+        &upper_orange,
     )));
     world.add(Rc::new(Quad::new(
         Vec3(-2., -3., 5.),
         Vec3(4., 0., 0.),
         Vec3(0., 0., -4.),
-        lower_teal,
+        &lower_teal,
     )));
 
     // Set up camera
@@ -310,13 +311,15 @@ fn simple_light() -> (HittableList, Camera) {
 
     let difflight: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Color::new(4., 4., 4.)));
     world.add(Rc::new(Sphere::stationary(
-        Vec3(0., 7., 0.), 2., &difflight
+        Vec3(0., 7., 0.),
+        2.,
+        &difflight,
     )));
     world.add(Rc::new(Quad::new(
         Vec3(3., 1., -2.),
         Vec3(2., 0., 0.),
         Vec3(0., 2., 0.),
-        difflight,
+        &difflight,
     )));
 
     // Set up camera
@@ -332,6 +335,79 @@ fn simple_light() -> (HittableList, Camera) {
         vfov: 20.,
         lookfrom: Vec3(26., 3., 6.),
         lookat: Vec3(0., 2., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
+
+    (world, camera)
+}
+
+fn cornell_box() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let red: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.65, 0.05, 0.05)));
+    let white: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.73, 0.73, 0.73)));
+    let green: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.12, 0.45, 0.15)));
+    let light: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Vec3(15., 15., 15.)));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(555., 0., 0.),
+        Vec3(0., 555., 0.),
+        Vec3(0., 0., 555.),
+        &green,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 0.),
+        Vec3(0., 555., 0.),
+        Vec3(0., 0., 555.),
+        &red,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(343., 554., 332.),
+        Vec3(-130., 0., 0.),
+        Vec3(0., 0., -105.),
+        &light,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 0.),
+        Vec3(555., 0., 0.),
+        Vec3(0., 0., 555.),
+        &white,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(555., 555., 555.),
+        Vec3(-555., 0., 0.),
+        Vec3(0., 0., -555.),
+        &white,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 555.),
+        Vec3(555., 0., 0.),
+        Vec3(0., 555., 0.),
+        &white,
+    )));
+
+    // Set up camera
+    let image_params = ImageParams {
+        aspect_ratio: 1.,
+        image_width: 600,
+        samples_per_pixel: 200,
+        max_depth: 50,
+        background: Color::new(0., 0., 0.),
+    };
+
+    let camera_params = CameraParams {
+        vfov: 40.,
+        lookfrom: Vec3(278., 278., -800.),
+        lookat: Vec3(278., 278., 0.),
         vup: Vec3(0., 1., 0.),
         focus_distance: 10.,
         defocus_angle: 0.,

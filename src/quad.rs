@@ -21,7 +21,7 @@ pub struct Quad {
 }
 
 impl Quad {
-    pub fn new(q: Vec3, u: Vec3, v: Vec3, mat: Rc<dyn Material>) -> Self {
+    pub fn new(q: Vec3, u: Vec3, v: Vec3, mat: &Rc<dyn Material>) -> Self {
         let n = u.cross(&v);
         let normal = n.unit();
         let d = normal.dot(&q);
@@ -33,7 +33,7 @@ impl Quad {
             u,
             v,
             w,
-            mat,
+            mat: Rc::clone(mat),
             bbox,
             normal,
             d,
@@ -97,12 +97,12 @@ mod tests {
 
     #[test]
     fn hit_works() {
-        let difflight = Rc::new(DiffuseLight::from_color(Color::new(4., 4., 4.)));
+        let difflight: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Color::new(4., 4., 4.)));
         let quad = Rc::new(Quad::new(
             Vec3(3., 2., 0.),
             Vec3(2., 0., 0.),
             Vec3(0., 2., 0.),
-            difflight,
+            &difflight,
         ));
 
         let ray = Ray::new(Vec3(3., 2., 1.), Vec3(0., 0., -1.), 0.);
