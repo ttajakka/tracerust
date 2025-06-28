@@ -4,7 +4,6 @@ pub mod color;
 pub mod hittable;
 pub mod image_util;
 pub mod material;
-pub mod quad;
 pub mod ray;
 pub mod texture;
 pub mod util;
