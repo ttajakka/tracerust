@@ -3,7 +3,7 @@ use std::rc::Rc;
 use tracerust::bvh::BVHNode;
 use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
-use tracerust::hittable::{Hittable, HittableList, Quad, Sphere, Translate, hittable_box};
+use tracerust::hittable::{hittable_box, Hittable, HittableList, Quad, RotateY, Sphere, Translate};
 use tracerust::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
@@ -401,6 +401,7 @@ fn cornell_box() -> (HittableList, Camera) {
         &Vec3(165., 330., 165.),
         &white,
     ));
+    let box1: Rc<dyn Hittable> = Rc::new(RotateY::new(&box1, 15.));
     let box1: Rc<dyn Hittable> = Rc::new(Translate::new(&box1, Vec3(265., 0., 295.)));
 
     world.add(box1);
@@ -410,14 +411,15 @@ fn cornell_box() -> (HittableList, Camera) {
         &Vec3(165., 165., 165.),
         &white,
     ));
+    let box2: Rc<dyn Hittable> = Rc::new(RotateY::new(&box2, -18.));
     let box2: Rc<dyn Hittable> = Rc::new(Translate::new(&box2, Vec3(130., 0., 65.)));
     world.add(box2);
 
     // Set up camera
     let image_params = ImageParams {
         aspect_ratio: 1.,
-        image_width: 300,
-        samples_per_pixel: 100,
+        image_width: 800,
+        samples_per_pixel: 200,
         max_depth: 50,
         background: Color::new(0., 0., 0.),
     };

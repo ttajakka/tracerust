@@ -2,11 +2,11 @@ use crate::{
     bvh::AABB,
     material::Material,
     ray::Ray,
-    util::{Interval, UNIT},
+    util::{Interval, UNIT, degrees_to_radians},
     vec3::Vec3,
 };
+use core::f64;
 use std::cmp::Ordering;
-use std::f64;
 use std::rc::Rc;
 
 const PI: f64 = f64::consts::PI;
@@ -300,7 +300,7 @@ impl Hittable for Quad {
 
 /// Returns a 3D box (six sides) that contains the two opposite vertices a & b.
 pub fn hittable_box(a: &Vec3, b: &Vec3, mat: &Rc<dyn Material>) -> HittableList {
-    let mut sides  = HittableList::default();
+    let mut sides = HittableList::default();
 
     let min = Vec3(a.x().min(b.x()), a.y().min(b.y()), a.z().min(b.z()));
     let max = Vec3(a.x().max(b.x()), a.y().max(b.y()), a.z().max(b.z()));
@@ -309,12 +309,42 @@ pub fn hittable_box(a: &Vec3, b: &Vec3, mat: &Rc<dyn Material>) -> HittableList 
     let dy = Vec3(0., max.y() - min.y(), 0.);
     let dz = Vec3(0., 0., max.z() - min.z());
 
-    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), max.z()), dx, dy, mat)));
-    sides.add(Rc::new(Quad::new(Vec3(max.x(), min.y(), max.z()), -dz, dy, mat)));
-    sides.add(Rc::new(Quad::new(Vec3(max.x(), min.y(), min.z()), -dx, dy, mat)));
-    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), min.z()), dz, dy, mat)));
-    sides.add(Rc::new(Quad::new(Vec3(min.x(), max.y(), max.z()), dx, -dz, mat)));
-    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), min.z()), dx, dz, mat)));
+    sides.add(Rc::new(Quad::new(
+        Vec3(min.x(), min.y(), max.z()),
+        dx,
+        dy,
+        mat,
+    )));
+    sides.add(Rc::new(Quad::new(
+        Vec3(max.x(), min.y(), max.z()),
+        -dz,
+        dy,
+        mat,
+    )));
+    sides.add(Rc::new(Quad::new(
+        Vec3(max.x(), min.y(), min.z()),
+        -dx,
+        dy,
+        mat,
+    )));
+    sides.add(Rc::new(Quad::new(
+        Vec3(min.x(), min.y(), min.z()),
+        dz,
+        dy,
+        mat,
+    )));
+    sides.add(Rc::new(Quad::new(
+        Vec3(min.x(), max.y(), max.z()),
+        dx,
+        -dz,
+        mat,
+    )));
+    sides.add(Rc::new(Quad::new(
+        Vec3(min.x(), min.y(), min.z()),
+        dx,
+        dz,
+        mat,
+    )));
 
     sides
 }
@@ -322,7 +352,7 @@ pub fn hittable_box(a: &Vec3, b: &Vec3, mat: &Rc<dyn Material>) -> HittableList 
 pub struct Translate {
     object: Rc<dyn Hittable>,
     offset: Vec3,
-    bbox: AABB
+    bbox: AABB,
 }
 
 impl Translate {
@@ -330,7 +360,7 @@ impl Translate {
         Self {
             object: Rc::clone(object),
             offset,
-            bbox: object.bounding_box().clone() + offset
+            bbox: object.bounding_box().clone() + offset,
         }
     }
 }
@@ -348,7 +378,102 @@ impl Hittable for Translate {
                 Some(rec)
             }
         }
+    }
 
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
+    }
+}
+
+pub struct RotateY {
+    object: Rc<dyn Hittable>,
+    sin_theta: f64,
+    cos_theta: f64,
+    bbox: AABB,
+}
+
+impl RotateY {
+    pub fn new(object: &Rc<dyn Hittable>, angle: f64) -> Self {
+        let radians = degrees_to_radians(angle);
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let bbox = object.bounding_box();
+
+        let mut min = vec![f64::INFINITY, f64::INFINITY, f64::INFINITY];
+        let mut max = vec![f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let x = (i as f64) * bbox.x.max() + (1. - i as f64) * bbox.x.min();
+                    let y = (j as f64) * bbox.y.max() + (1. - j as f64) * bbox.y.min();
+                    let z = (k as f64) * bbox.z.max() + (1. - k as f64) * bbox.z.min();
+
+                    let newx = cos_theta * x + sin_theta * z;
+                    let newz = -sin_theta * x + cos_theta * z;
+
+                    let tester = vec![newx, y, newz];
+                    for c in 0..3 {
+                        min[c] = min[c].min(tester[c]);
+                        max[c] = max[c].max(tester[c])
+                    }
+                }
+            }
+        }
+
+        let min = Vec3(min[0], min[1], min[2]);
+        let max = Vec3(max[0], max[1], max[2]);
+
+        let bbox = AABB::from_points(min, max);
+
+        Self {
+            object: Rc::clone(object),
+            sin_theta,
+            cos_theta,
+            bbox,
+        }
+    }
+}
+
+impl Hittable for RotateY {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        // Transform the ray from world space to object space.
+        let co = self.cos_theta;
+        let si = self.sin_theta;
+
+        let orig = ray.origin();
+        let rdir = ray.dir();
+
+        let origin = Vec3(
+            co * orig.x() - si * orig.z(),
+            orig.y(),
+            si * orig.x() + co * orig.z(),
+        );
+
+        let dir = Vec3(
+            co * rdir.x() - si * rdir.z(),
+            rdir.y(),
+            si * rdir.x() + co * rdir.z(),
+        );
+
+        let rotated_ray = Ray::new(origin, dir, ray.time());
+
+        match self.object.hit(&rotated_ray, ray_t) {
+            None => None,
+            Some(mut rec) => {
+                rec.point = Vec3(
+                    co * rec.point.x() + si * rec.point.z(),
+                    rec.point.y(),
+                    -si * rec.point.x() + co * rec.point.z(),
+                );
+                rec.normal = Vec3(
+                    co * rec.normal.x() + si * rec.normal.z(),
+                    rec.normal.y(),
+                    -si * rec.normal.x() + co * rec.normal.z(),
+                );
+                Some(rec)
+            }
+        }
     }
 
     fn bounding_box(&self) -> &AABB {
@@ -358,8 +483,8 @@ impl Hittable for Translate {
 
 #[cfg(test)]
 mod tests {
-    use crate::material::Dielectric;
     use super::*;
+    use crate::material::Dielectric;
 
     #[test]
     fn get_uv_works() {
