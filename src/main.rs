@@ -3,7 +3,7 @@ use std::rc::Rc;
 use tracerust::bvh::BVHNode;
 use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
-use tracerust::hittable::{HittableList, Quad, Sphere};
+use tracerust::hittable::{HittableList, Quad, Sphere, hittable_box};
 use tracerust::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
@@ -352,6 +352,7 @@ fn cornell_box() -> (HittableList, Camera) {
     let green: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.12, 0.45, 0.15)));
     let light: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Vec3(15., 15., 15.)));
 
+    // add walls
     world.add(Rc::new(Quad::new(
         Vec3(555., 0., 0.),
         Vec3(0., 555., 0.),
@@ -394,11 +395,24 @@ fn cornell_box() -> (HittableList, Camera) {
         &white,
     )));
 
+    // add boxes
+    world.add(Rc::new(hittable_box(
+        &Vec3(130., 0., 65.),
+        &Vec3(295., 165., 230.),
+        &white,
+    )));
+
+    world.add(Rc::new(hittable_box(
+        &Vec3(265., 0., 295.),
+        &Vec3(430., 330., 460.),
+        &white,
+    )));
+
     // Set up camera
     let image_params = ImageParams {
         aspect_ratio: 1.,
-        image_width: 600,
-        samples_per_pixel: 200,
+        image_width: 300,
+        samples_per_pixel: 100,
         max_depth: 50,
         background: Color::new(0., 0., 0.),
     };

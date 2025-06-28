@@ -298,6 +298,27 @@ impl Hittable for Quad {
     }
 }
 
+/// Returns a 3D box (six sides) that contains the two opposite vertices a & b.
+pub fn hittable_box(a: &Vec3, b: &Vec3, mat: &Rc<dyn Material>) -> HittableList {
+    let mut sides  = HittableList::default();
+
+    let min = Vec3(a.x().min(b.x()), a.y().min(b.y()), a.z().min(b.z()));
+    let max = Vec3(a.x().max(b.x()), a.y().max(b.y()), a.z().max(b.z()));
+
+    let dx = Vec3(max.x() - min.x(), 0., 0.);
+    let dy = Vec3(0., max.y() - min.y(), 0.);
+    let dz = Vec3(0., 0., max.z() - min.z());
+
+    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), max.z()), dx, dy, mat)));
+    sides.add(Rc::new(Quad::new(Vec3(max.x(), min.y(), max.z()), -dz, dy, mat)));
+    sides.add(Rc::new(Quad::new(Vec3(max.x(), min.y(), min.z()), -dx, dy, mat)));
+    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), min.z()), dz, dy, mat)));
+    sides.add(Rc::new(Quad::new(Vec3(min.x(), max.y(), max.z()), dx, -dz, mat)));
+    sides.add(Rc::new(Quad::new(Vec3(min.x(), min.y(), min.z()), dx, dz, mat)));
+
+    sides
+}
+
 #[cfg(test)]
 mod tests {
     use crate::material::Dielectric;
