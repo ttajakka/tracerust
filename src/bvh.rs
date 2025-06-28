@@ -1,4 +1,4 @@
-use std::{fmt::Display, rc::Rc};
+use std::{fmt::Display, ops::Add, rc::Rc};
 
 use crate::{
     hittable::{self, HitRecord, Hittable},
@@ -141,6 +141,18 @@ impl AABB {
             }
         }
         true
+    }
+}
+
+impl Add<Vec3> for AABB {
+    type Output = Self;
+
+    fn add(self, rhs: Vec3) -> Self::Output {
+        Self {
+            x: self.x + rhs.x(),
+            y: self.y + rhs.y(),
+            z: self.z + rhs.z()
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::color::Color;
 use rand;
-use std::io::{BufWriter, Write};
+use std::{io::{BufWriter, Write}, ops::Add};
 
 pub fn random_f64(min: f64, max: f64) -> f64 {
     min + (max - min) * rand::random::<f64>()
@@ -78,6 +78,25 @@ impl Interval {
             min: self.min - padding,
             max: self.max + padding,
         }
+    }
+}
+
+impl Add<f64> for Interval {
+    type Output = Self;
+
+    fn add(self, rhs: f64) -> Self::Output {
+        Self {
+            min: self.min + rhs,
+            max: self.max + rhs
+        }
+    }
+}
+
+impl Add<Interval> for f64 {
+    type Output = Interval;
+
+    fn add(self, rhs: Interval) -> Self::Output {
+        rhs + self
     }
 }
 

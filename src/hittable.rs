@@ -319,6 +319,43 @@ pub fn hittable_box(a: &Vec3, b: &Vec3, mat: &Rc<dyn Material>) -> HittableList 
     sides
 }
 
+pub struct Translate {
+    object: Rc<dyn Hittable>,
+    offset: Vec3,
+    bbox: AABB
+}
+
+impl Translate {
+    pub fn new(object: &Rc<dyn Hittable>, offset: Vec3) -> Self {
+        Self {
+            object: Rc::clone(object),
+            offset,
+            bbox: object.bounding_box().clone() + offset
+        }
+    }
+}
+
+impl Hittable for Translate {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        // Move the ray backwards by the offset
+        let offset_ray = Ray::new(ray.origin() - self.offset, ray.dir(), ray.time());
+
+        // Determine whether an intersection exists along the offset ray (and if so, where)
+        match self.object.hit(&offset_ray, ray_t) {
+            None => None,
+            Some(mut rec) => {
+                rec.point += self.offset;
+                Some(rec)
+            }
+        }
+
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        &self.bbox
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::material::Dielectric;
