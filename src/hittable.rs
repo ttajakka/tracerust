@@ -1,13 +1,11 @@
+use rand::random;
+
 use crate::{
-    bvh::AABB,
-    material::Material,
-    ray::Ray,
-    util::{Interval, UNIT, degrees_to_radians},
-    vec3::Vec3,
+    bvh::AABB, color::Color, material::{Isotropic, Material}, ray::Ray, util::{degrees_to_radians, Interval, UNIT, UNIVERSE}, vec3::Vec3
 };
 use core::f64;
-use std::cmp::Ordering;
 use std::rc::Rc;
+use std::{cmp::Ordering, f64::INFINITY};
 
 const PI: f64 = f64::consts::PI;
 
@@ -478,6 +476,80 @@ impl Hittable for RotateY {
 
     fn bounding_box(&self) -> &AABB {
         &self.bbox
+    }
+}
+
+pub struct ConstantMedium {
+    boundary: Rc<dyn Hittable>,
+    neg_inv_density: f64,
+    phase_function: Rc<dyn Material>,
+}
+
+impl ConstantMedium {
+    pub fn from_color(boundary: &Rc<dyn Hittable>, density: f64, albedo: Color) -> Self {
+        Self {
+            boundary: Rc::clone(boundary),
+            neg_inv_density: - 1./density,
+            phase_function: Rc::new(Isotropic::from_albedo(albedo))
+        }
+    }
+}
+
+impl Hittable for ConstantMedium {
+    fn hit(&self, ray: &Ray, ray_t: &Interval) -> Option<HitRecord> {
+        match self.boundary.hit(ray, &UNIVERSE) {
+            None => None,
+            Some(mut rec1) => {
+                match self
+                    .boundary
+                    .hit(ray, &Interval::new(rec1.t + 0.0001, INFINITY))
+                {
+                    None => None,
+                    Some(mut rec2) => {
+                        if rec1.t < ray_t.min() {
+                            rec1.t = ray_t.min();
+                        };
+                        if rec2.t > ray_t.max() {
+                            rec2.t = ray_t.max();
+                        };
+
+                        if rec1.t >= rec2.t {
+                            return None;
+                        }
+
+                        let ray_length = ray.dir().length();
+                        let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
+                        let hit_distance = self.neg_inv_density * random::<f64>().ln();
+
+                        if hit_distance > distance_inside_boundary {
+                            return None;
+                        }
+
+                        let t = rec1.t + hit_distance / ray_length;
+                        let point = ray.at(t);
+                        let normal = Vec3(1., 0., 0.);
+                        let mat = Rc::clone(&self.phase_function);
+                        let front_face = true;
+                        let u = 0.;
+                        let v = 0.;
+
+                        Some(HitRecord {
+                            point,
+                            normal,
+                            mat,
+                            t,
+                            u,
+                            v,
+                            front_face,
+                        })
+                    }
+                }
+            }
+        }
+    }
+
+    fn bounding_box(&self) -> &AABB {
+        self.boundary.bounding_box()
     }
 }
 

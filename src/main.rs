@@ -3,14 +3,14 @@ use std::rc::Rc;
 use tracerust::bvh::BVHNode;
 use tracerust::camera::{Camera, CameraParams, ImageParams};
 use tracerust::color::Color;
-use tracerust::hittable::{hittable_box, Hittable, HittableList, Quad, RotateY, Sphere, Translate};
+use tracerust::hittable::{hittable_box, ConstantMedium, Hittable, HittableList, Quad, RotateY, Sphere, Translate};
 use tracerust::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use tracerust::texture::{CheckerTexture, ImageTexture, NoiseTexture};
 use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let (mut world, cam) = match 7 {
+    let (mut world, cam) = match 8 {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
@@ -18,6 +18,7 @@ fn main() {
         5 => quads(),
         6 => simple_light(),
         7 => cornell_box(),
+        8 => cornell_smoke(),
         _ => panic!(),
     };
 
@@ -419,6 +420,102 @@ fn cornell_box() -> (HittableList, Camera) {
     let image_params = ImageParams {
         aspect_ratio: 1.,
         image_width: 800,
+        samples_per_pixel: 200,
+        max_depth: 50,
+        background: Color::new(0., 0., 0.),
+    };
+
+    let camera_params = CameraParams {
+        vfov: 40.,
+        lookfrom: Vec3(278., 278., -800.),
+        lookat: Vec3(278., 278., 0.),
+        vup: Vec3(0., 1., 0.),
+        focus_distance: 10.,
+        defocus_angle: 0.,
+    };
+
+    let camera = Camera::new(image_params, camera_params);
+
+    (world, camera)
+}
+
+fn cornell_smoke() -> (HittableList, Camera) {
+    let mut world = HittableList::default();
+
+    let red: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.65, 0.05, 0.05)));
+    let white: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.73, 0.73, 0.73)));
+    let green: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.12, 0.45, 0.15)));
+    let light: Rc<dyn Material> = Rc::new(DiffuseLight::from_color(Vec3(7., 7., 7.)));
+
+    // add walls
+    world.add(Rc::new(Quad::new(
+        Vec3(555., 0., 0.),
+        Vec3(0., 555., 0.),
+        Vec3(0., 0., 555.),
+        &green,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 0.),
+        Vec3(0., 555., 0.),
+        Vec3(0., 0., 555.),
+        &red,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(113., 554., 127.),
+        Vec3(330., 0., 0.),
+        Vec3(0., 0., 305.),
+        &light,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 0.),
+        Vec3(555., 0., 0.),
+        Vec3(0., 0., 555.),
+        &white,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(555., 555., 555.),
+        Vec3(-555., 0., 0.),
+        Vec3(0., 0., -555.),
+        &white,
+    )));
+
+    world.add(Rc::new(Quad::new(
+        Vec3(0., 0., 555.),
+        Vec3(555., 0., 0.),
+        Vec3(0., 555., 0.),
+        &white,
+    )));
+
+    // add boxes
+    let box1: Rc<dyn Hittable> = Rc::new(hittable_box(
+        &Vec3(0., 0., 0.),
+        &Vec3(165., 330., 165.),
+        &white,
+    ));
+    let box1: Rc<dyn Hittable> = Rc::new(RotateY::new(&box1, 15.));
+    let box1: Rc<dyn Hittable> = Rc::new(Translate::new(&box1, Vec3(265., 0., 295.)));
+    let box1: Rc<dyn Hittable> = Rc::new(ConstantMedium::from_color(&box1, 0.01, Color::new(0., 0., 0.)));
+
+    world.add(box1);
+
+    let box2: Rc<dyn Hittable> = Rc::new(hittable_box(
+        &Vec3(0., 0., 0.),
+        &Vec3(165., 165., 165.),
+        &white,
+    ));
+    let box2: Rc<dyn Hittable> = Rc::new(RotateY::new(&box2, -18.));
+    let box2: Rc<dyn Hittable> = Rc::new(Translate::new(&box2, Vec3(130., 0., 65.)));
+    let box2: Rc<dyn Hittable> = Rc::new(ConstantMedium::from_color(&box2, 0.01, Color::new(1., 1., 1.)));
+    world.add(box2);
+
+    // Set up camera
+    let image_params = ImageParams {
+        aspect_ratio: 1.,
+        image_width: 600,
         samples_per_pixel: 200,
         max_depth: 50,
         background: Color::new(0., 0., 0.),

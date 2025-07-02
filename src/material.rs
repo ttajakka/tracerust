@@ -132,7 +132,7 @@ pub struct DiffuseLight {
 impl DiffuseLight {
     pub fn new(tex: &Rc<dyn Texture>) -> Self {
         Self {
-            tex: Rc::clone(tex)
+            tex: Rc::clone(tex),
         }
     }
 
@@ -146,5 +146,26 @@ impl DiffuseLight {
 impl Material for DiffuseLight {
     fn emitted(&self, u: f64, v: f64, p: Vec3) -> Color {
         self.tex.value(u, v, p)
+    }
+}
+
+pub struct Isotropic {
+    tex: Rc<dyn Texture>,
+}
+
+impl Isotropic {
+    pub fn from_albedo(albedo: Color) -> Self {
+        Self { tex: Rc::new(SolidColor::new(albedo))}
+    }
+}
+
+impl Material for Isotropic {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterResult> {
+        let scattered = Ray::new(rec.point, Vec3::random_unit_vector(), r_in.time());
+        let attenuation = self.tex.value(rec.u, rec.v, rec.point);
+        Some(ScatterResult {
+            scattered,
+            attenuation,
+        })
     }
 }
