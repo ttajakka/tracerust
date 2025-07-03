@@ -83,7 +83,7 @@ impl Texture for ImageTexture {
         let u = u.clamp(0., 1.);
         let v = 1. - v.clamp(0., 1.);
         let i = (u * self.image.width as f64) as usize;
-        let j = (v * self.image.height as f64) as usize - 1;
+        let j = (v * self.image.height as f64) as usize;
 
         1.0 / 255. * self.image.pixel_data(i, j)
     }
