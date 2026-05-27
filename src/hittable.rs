@@ -1,11 +1,18 @@
 use rand::random;
 
 use crate::{
-    bvh::AABB, color::Color, material::{Isotropic, Material}, ray::Ray, util::{degrees_to_radians, Interval, UNIT, UNIVERSE}, vec3::Vec3
+    bvh::AABB,
+    color::Color,
+    material::{Isotropic, Material},
+    ray::Ray,
+    util::{Interval, UNIT, UNIVERSE, degrees_to_radians},
+    vec3::Vec3,
 };
 use core::f64;
+use std::cmp::Ordering;
 use std::rc::Rc;
-use std::{cmp::Ordering, f64::INFINITY};
+
+const INFINITY: f64 = f64::INFINITY;
 
 const PI: f64 = f64::consts::PI;
 
@@ -105,11 +112,11 @@ impl HittableList {
         let mut closest_so_far = ray_t.max();
 
         for o in &self.objects {
-            if let Some(rec) = o.hit(ray, ray_t) {
-                if rec.t < closest_so_far {
-                    closest_so_far = rec.t;
-                    rec_out = Some(rec);
-                }
+            if let Some(rec) = o.hit(ray, ray_t)
+                && rec.t < closest_so_far
+            {
+                closest_so_far = rec.t;
+                rec_out = Some(rec);
             };
         }
 
@@ -397,8 +404,8 @@ impl RotateY {
         let cos_theta = radians.cos();
         let bbox = object.bounding_box();
 
-        let mut min = vec![f64::INFINITY, f64::INFINITY, f64::INFINITY];
-        let mut max = vec![f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut min = [f64::INFINITY, f64::INFINITY, f64::INFINITY];
+        let mut max = [f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
 
         for i in 0..2 {
             for j in 0..2 {
@@ -410,7 +417,7 @@ impl RotateY {
                     let newx = cos_theta * x + sin_theta * z;
                     let newz = -sin_theta * x + cos_theta * z;
 
-                    let tester = vec![newx, y, newz];
+                    let tester = [newx, y, newz];
                     for c in 0..3 {
                         min[c] = min[c].min(tester[c]);
                         max[c] = max[c].max(tester[c])
@@ -489,8 +496,8 @@ impl ConstantMedium {
     pub fn from_color(boundary: &Rc<dyn Hittable>, density: f64, albedo: Color) -> Self {
         Self {
             boundary: Rc::clone(boundary),
-            neg_inv_density: - 1./density,
-            phase_function: Rc::new(Isotropic::from_albedo(albedo))
+            neg_inv_density: -1. / density,
+            phase_function: Rc::new(Isotropic::from_albedo(albedo)),
         }
     }
 }

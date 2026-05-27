@@ -68,7 +68,7 @@ impl Vec3 {
         loop {
             let p = Vec3(random_f64(-1., 1.), random_f64(-1., 1.), 0.);
             if p.length_squared() < 1. {
-                return p
+                return p;
             }
         }
     }

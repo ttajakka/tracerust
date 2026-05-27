@@ -637,7 +637,11 @@ fn final_scene(image_width: u32, samples_per_pixel: u32, max_depth: u32) -> (Hit
     let white: Rc<dyn Material> = Rc::new(Lambertian::new(Vec3(0.73, 0.73, 0.73)));
     let ns = 1000;
     for _ in 0..ns {
-        boxes2.add(Rc::new(Sphere::stationary(Vec3::random_mm(0., 165.), 10., &white)));
+        boxes2.add(Rc::new(Sphere::stationary(
+            Vec3::random_mm(0., 165.),
+            10.,
+            &white,
+        )));
     }
 
     let boxes2: Rc<dyn Hittable> = BVHNode::new(&mut boxes2.objects, 0, ns);

@@ -6,7 +6,7 @@ use crate::vec3::Vec3;
 pub struct Ray {
     origin: Vec3,
     dir: Vec3,
-    tm: f64
+    tm: f64,
 }
 
 impl Ray {
@@ -14,7 +14,7 @@ impl Ray {
         Ray {
             origin,
             dir,
-            tm: time
+            tm: time,
         }
     }
 
@@ -44,7 +44,7 @@ mod tests {
         let ray = Ray {
             origin: Vec3(1.0, 1.0, 0.0),
             dir: Vec3(0.0, 2.0, 1.0),
-            tm: 0.
+            tm: 0.,
         };
         assert_eq!(ray.at(-1.0), Vec3(1.0, -1.0, -1.0))
     }

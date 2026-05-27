@@ -1,11 +1,11 @@
-use image::{ImageReader, RgbImage};
-use crate::vec3::Vec3;
 use crate::color::Color;
+use crate::vec3::Vec3;
+use image::{ImageReader, RgbImage};
 
 pub struct ImageTextureData {
     pub height: usize,
     pub width: usize,
-    data: RgbImage
+    data: RgbImage,
 }
 
 impl ImageTextureData {
@@ -16,7 +16,7 @@ impl ImageTextureData {
             return Self {
                 height: img.height() as usize,
                 width: img.width() as usize,
-                data: img
+                data: img,
             };
         }
         panic!()

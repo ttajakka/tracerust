@@ -155,7 +155,9 @@ pub struct Isotropic {
 
 impl Isotropic {
     pub fn from_albedo(albedo: Color) -> Self {
-        Self { tex: Rc::new(SolidColor::new(albedo))}
+        Self {
+            tex: Rc::new(SolidColor::new(albedo)),
+        }
     }
 }
 

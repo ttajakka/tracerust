@@ -151,7 +151,7 @@ impl Add<Vec3> for AABB {
         Self {
             x: self.x + rhs.x(),
             y: self.y + rhs.y(),
-            z: self.z + rhs.z()
+            z: self.z + rhs.z(),
         }
     }
 }

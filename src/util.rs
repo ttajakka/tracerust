@@ -1,6 +1,9 @@
 use crate::color::Color;
 use rand;
-use std::{io::{BufWriter, Write}, ops::Add};
+use std::{
+    io::{BufWriter, Write},
+    ops::Add,
+};
 
 pub fn random_f64(min: f64, max: f64) -> f64 {
     min + (max - min) * rand::random::<f64>()
@@ -87,7 +90,7 @@ impl Add<f64> for Interval {
     fn add(self, rhs: f64) -> Self::Output {
         Self {
             min: self.min + rhs,
-            max: self.max + rhs
+            max: self.max + rhs,
         }
     }
 }
@@ -108,9 +111,7 @@ pub const UNIVERSE: Interval = Interval {
     min: f64::NEG_INFINITY,
     max: f64::INFINITY,
 };
-pub const UNIT: Interval = Interval {
-    min: 0., max: 1.
-};
+pub const UNIT: Interval = Interval { min: 0., max: 1. };
 
 pub struct PPM {
     width: u32,
@@ -196,7 +197,7 @@ mod tests {
     fn random_f64_works() {
         for _ in 0..100 {
             let random = random_f64(2., 5.);
-            assert!(2. <= random && random < 5.)
+            assert!((2. ..5.).contains(&random))
         }
     }
 

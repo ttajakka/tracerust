@@ -1,7 +1,6 @@
 use crate::util::INTENSITY;
 use crate::vec3::Vec3;
 
-
 fn linear_to_gamma(linear_component: f64) -> f64 {
     match linear_component > 0. {
         true => linear_component.sqrt(),

@@ -138,7 +138,7 @@ impl Perlin {
             accum += weight * self.noise(&temp_p);
             weight *= 0.5;
             temp_p *= 2.;
-        };
+        }
 
         accum.abs()
     }
