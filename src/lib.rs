@@ -1,5 +1,6 @@
 pub mod bvh;
 pub mod camera;
+pub mod cli;
 pub mod color;
 pub mod hittable;
 pub mod image_util;

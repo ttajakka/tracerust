@@ -1,8 +1,10 @@
 use std::rc::Rc;
 
+use clap::Parser;
 use rand::random_range;
 use tracerust::bvh::BVHNode;
 use tracerust::camera::{Camera, CameraParams, ImageParams};
+use tracerust::cli::Args;
 use tracerust::color::Color;
 use tracerust::hittable::{
     ConstantMedium, Hittable, HittableList, Quad, RotateY, Sphere, Translate, hittable_box,
@@ -13,7 +15,9 @@ use tracerust::util;
 use tracerust::vec3::Vec3;
 
 fn main() {
-    let (mut world, cam) = match 9 {
+    let args = Args::parse();
+
+    let (mut world, cam) = match args.scene {
         1 => bouncing_spheres(),
         2 => checkered_spheres(),
         3 => earth(),
